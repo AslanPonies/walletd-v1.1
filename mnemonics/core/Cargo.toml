@@ -1,0 +1,20 @@
+[package]
+name = "walletd_mnemonics_core"
+version = "0.2.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["The WalletD Team"]
+description = "WalletD Mnemonic Model"
+homepage = "https://walletd.org/"
+repository = "https://github.com/walletd/walletd"
+readme = "README.md"
+categories = ["cryptography::cryptocurrencies"]
+
+[lib]
+name = "walletd_mnemonics_core"
+path = "src/lib.rs"
+
+[dependencies]
+hex = { version = "0.4.2" }
+serde = { version = "1.0.130", features = ["derive"] }
+

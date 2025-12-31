@@ -1,0 +1,92 @@
+# WalletD Dependency Policy Configuration
+# 
+# This file configures `cargo deny` for comprehensive dependency checking.
+# Run: cargo deny check
+# Install: cargo install cargo-deny
+#
+# Documentation: https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+# Target platforms to check
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+]
+
+# ============================================================================
+# ADVISORIES - Security vulnerability checking
+# ============================================================================
+[advisories]
+db-path = "~/.cargo/advisory-db"
+db-urls = ["https://github.com/rustsec/advisory-db"]
+
+# Treat unmaintained crates as warnings, not errors
+unmaintained = "warn"
+yanked = "warn"
+notice = "warn"
+
+# Ignored advisories with documented justification
+ignore = [
+    # ruint 1.17.0 - Unsoundness in reciprocal_mg10 function
+    # Source: alloy -> alloy-primitives -> ruint  
+    # Risk: LOW - function not used in WalletD code paths
+    # Status: Awaiting upstream fix
+    "RUSTSEC-2025-0137",
+]
+
+# ============================================================================
+# LICENSES - Allowed licenses for dependencies
+# ============================================================================
+[licenses]
+# We use permissive licensing
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unlicense",
+    "Zlib",
+    "CC0-1.0",
+    "MPL-2.0",
+]
+
+# Confidence threshold for license detection
+confidence-threshold = 0.8
+
+# ============================================================================
+# BANS - Dependency restrictions
+# ============================================================================
+[bans]
+# Lint level for multiple versions of the same crate
+multiple-versions = "warn"
+wildcards = "warn"
+highlight = "all"
+
+# Allow specific duplicates that are hard to resolve
+allow = []
+
+# Deny specific crates (example)
+deny = [
+    # Add crates to ban here if needed
+    # { name = "openssl" }  # Example: prefer rustls
+]
+
+# Skip checking specific crates for duplicates
+skip = []
+
+# ============================================================================
+# SOURCES - Where dependencies can come from
+# ============================================================================
+[sources]
+unknown-registry = "deny"
+unknown-git = "warn"
+
+# Allowed registries
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+# Allowed git sources (if any)
+allow-git = []

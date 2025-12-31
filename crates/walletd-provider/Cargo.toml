@@ -1,0 +1,40 @@
+[package]
+name = "walletd-provider"
+version = "0.1.0"
+edition = "2021"
+description = "Provider management and connection pooling for WalletD"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/walletd/walletd"
+keywords = ["wallet", "cryptocurrency", "blockchain", "rpc", "provider"]
+categories = ["cryptography::cryptocurrencies"]
+
+[dependencies]
+tokio = { version = "1", features = ["sync", "time"] }
+async-trait = "0.1"
+thiserror = "1.0"
+url = "2.5"
+dashmap = "5.5"
+tracing = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# HTTP client with connection pooling
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "gzip"], default-features = false }
+
+# Rate limiting
+governor = "0.8"
+
+# Metrics
+metrics = { version = "0.23", optional = true }
+
+# Optional chain-specific providers
+alloy = { version = "1.0", features = ["full"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "macros"] }
+wiremock = "0.6"
+
+[features]
+default = []
+ethereum = ["alloy"]
+metrics = ["dep:metrics"]

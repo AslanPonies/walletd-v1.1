@@ -1,0 +1,20 @@
+[package]
+name = "walletd_erc20"
+version = "0.1.0"
+edition = "2021"
+
+description = "ERC‑20 token adapters for the WalletD SDK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Migrated from ethers to alloy for security (ring 0.16 → 0.17)
+alloy = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"], optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+default = ["tokio"]
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }

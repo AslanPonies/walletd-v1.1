@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WalletD WASM Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .output {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            color: #666;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.ready {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🦀 WalletD WASM Demo</h1>
+    
+    <div id="status" class="status loading">Loading WASM module...</div>
+    
+    <div class="section">
+        <h2>🎲 Mnemonic Generator</h2>
+        <button id="generate12" disabled>Generate 12 Words</button>
+        <button id="generate24" disabled>Generate 24 Words</button>
+        <div id="mnemonicOutput" class="output">Click a button to generate a mnemonic...</div>
+    </div>
+    
+    <div class="section">
+        <h2>Ξ Ethereum Wallet</h2>
+        <label>Mnemonic (or leave empty for random):</label>
+        <input type="text" id="ethMnemonic" placeholder="Enter mnemonic or leave empty...">
+        <button id="createEthWallet" disabled>Create Wallet</button>
+        <div id="ethOutput" class="output">Wallet details will appear here...</div>
+    </div>
+    
+    <div class="section">
+        <h2>₿ Bitcoin Wallet</h2>
+        <label>Mnemonic:</label>
+        <input type="text" id="btcMnemonic" placeholder="Enter mnemonic...">
+        <label>Network:</label>
+        <select id="btcNetwork">
+            <option value="mainnet">Mainnet</option>
+            <option value="testnet">Testnet</option>
+        </select>
+        <button id="createBtcWallet" disabled>Create Keys</button>
+        <div id="btcOutput" class="output">Bitcoin keys will appear here...</div>
+    </div>
+    
+    <div class="section">
+        <h2>🔐 Message Signing</h2>
+        <label>Message to sign:</label>
+        <input type="text" id="signMessage" placeholder="Enter message to sign..." value="Hello, WalletD!">
+        <button id="signBtn" disabled>Sign with ETH Wallet</button>
+        <div id="signOutput" class="output">Signature will appear here...</div>
+    </div>
+    
+    <div class="section">
+        <h2>💰 Monero Amount Converter</h2>
+        <label>XMR Amount:</label>
+        <input type="number" id="xmrAmount" placeholder="Enter XMR amount..." value="1.5" step="0.000001">
+        <button id="convertXmr" disabled>Convert</button>
+        <div id="xmrOutput" class="output">Conversion results will appear here...</div>
+    </div>
+    
+    <div class="section">
+        <h2>🔧 Utilities</h2>
+        <label>Data to hash:</label>
+        <input type="text" id="hashInput" placeholder="Enter text to hash..." value="hello">
+        <button id="hashBtn" disabled>Compute Hashes</button>
+        <div id="hashOutput" class="output">Hash results will appear here...</div>
+    </div>
+
+    <script type="module">
+        // Import from the built WASM package
+        // After running: wasm-pack build --target web
+        import init, {
+            version,
+            generateMnemonic,
+            validateMnemonic,
+            EthereumWallet,
+            BitcoinKeys,
+            MoneroAmount,
+            keccak256,
+            sha256,
+            bytesToHex,
+            ethToWei,
+            weiToEth
+        } from '../pkg/walletd_wasm.js';
+        
+        let currentEthWallet = null;
+        
+        async function run() {
+            try {
+                await init();
+                
+                const statusEl = document.getElementById('status');
+                statusEl.className = 'status ready';
+                statusEl.textContent = `✅ WASM module loaded! Version: ${version()}`;
+                
+                // Enable all buttons
+                document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                
+                // Mnemonic generation
+                document.getElementById('generate12').onclick = () => {
+                    const mnemonic = generateMnemonic(12);
+                    document.getElementById('mnemonicOutput').textContent = mnemonic;
+                    document.getElementById('ethMnemonic').value = mnemonic;
+                    document.getElementById('btcMnemonic').value = mnemonic;
+                };
+                
+                document.getElementById('generate24').onclick = () => {
+                    const mnemonic = generateMnemonic(24);
+                    document.getElementById('mnemonicOutput').textContent = mnemonic;
+                    document.getElementById('ethMnemonic').value = mnemonic;
+                    document.getElementById('btcMnemonic').value = mnemonic;
+                };
+                
+                // Ethereum wallet
+                document.getElementById('createEthWallet').onclick = () => {
+                    try {
+                        const mnemonic = document.getElementById('ethMnemonic').value.trim();
+                        
+                        if (mnemonic) {
+                            currentEthWallet = EthereumWallet.fromMnemonic(mnemonic);
+                        } else {
+                            currentEthWallet = new EthereumWallet();
+                        }
+                        
+                        document.getElementById('ethOutput').textContent = 
+`Address: ${currentEthWallet.address()}
+Public Key: ${currentEthWallet.publicKey()}
+Private Key: ${currentEthWallet.privateKey()}
+
+⚠️ Never share your private key!`;
+                    } catch (e) {
+                        document.getElementById('ethOutput').textContent = `Error: ${e.message}`;
+                    }
+                };
+                
+                // Bitcoin keys
+                document.getElementById('createBtcWallet').onclick = () => {
+                    try {
+                        const mnemonic = document.getElementById('btcMnemonic').value.trim();
+                        const network = document.getElementById('btcNetwork').value;
+                        
+                        if (!mnemonic) {
+                            throw new Error('Please enter a mnemonic');
+                        }
+                        
+                        const keys = BitcoinKeys.fromMnemonic(mnemonic, network);
+                        
+                        document.getElementById('btcOutput').textContent = 
+`Network: ${keys.network()}
+Address: ${keys.address()}
+Public Key: ${keys.publicKey()}
+WIF: ${keys.wif()}
+
+⚠️ Never share your WIF key!`;
+                    } catch (e) {
+                        document.getElementById('btcOutput').textContent = `Error: ${e.message}`;
+                    }
+                };
+                
+                // Message signing
+                document.getElementById('signBtn').onclick = () => {
+                    try {
+                        if (!currentEthWallet) {
+                            throw new Error('Create an ETH wallet first');
+                        }
+                        
+                        const message = document.getElementById('signMessage').value;
+                        const signature = currentEthWallet.signMessage(message);
+                        
+                        document.getElementById('signOutput').textContent = 
+`Message: ${message}
+Signer: ${currentEthWallet.address()}
+Signature: ${signature}`;
+                    } catch (e) {
+                        document.getElementById('signOutput').textContent = `Error: ${e.message}`;
+                    }
+                };
+                
+                // Monero conversion
+                document.getElementById('convertXmr').onclick = () => {
+                    try {
+                        const xmr = parseFloat(document.getElementById('xmrAmount').value);
+                        const amount = MoneroAmount.fromXmr(xmr);
+                        
+                        document.getElementById('xmrOutput').textContent = 
+`Input: ${xmr} XMR
+Piconero: ${amount.piconero()}
+Display: ${amount.display()}
+
+Double: ${amount.add(amount).display()}
+Half: ${amount.sub(MoneroAmount.fromXmr(xmr / 2)).display()}`;
+                    } catch (e) {
+                        document.getElementById('xmrOutput').textContent = `Error: ${e.message}`;
+                    }
+                };
+                
+                // Hash utilities
+                document.getElementById('hashBtn').onclick = () => {
+                    try {
+                        const input = document.getElementById('hashInput').value;
+                        const encoder = new TextEncoder();
+                        const data = encoder.encode(input);
+                        
+                        const keccakHash = keccak256(data);
+                        const shaHash = sha256(data);
+                        
+                        document.getElementById('hashOutput').textContent = 
+`Input: "${input}"
+Input (hex): ${bytesToHex(data)}
+
+Keccak256: ${bytesToHex(keccakHash)}
+SHA256: ${bytesToHex(shaHash)}
+
+ETH Conversions:
+1 ETH = ${ethToWei(1)} Wei
+1000000000000000000 Wei = ${weiToEth('1000000000000000000')} ETH`;
+                    } catch (e) {
+                        document.getElementById('hashOutput').textContent = `Error: ${e.message}`;
+                    }
+                };
+                
+            } catch (e) {
+                const statusEl = document.getElementById('status');
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ Failed to load WASM: ${e.message}`;
+                console.error(e);
+            }
+        }
+        
+        run();
+    </script>
+</body>
+</html>

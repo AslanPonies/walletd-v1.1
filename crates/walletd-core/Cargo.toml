@@ -1,0 +1,12 @@
+[package]
+name = "walletd-core"
+version = "1.1.0"
+edition = "2021"
+description = "Core WalletD SDK functionality with security enhancements"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/walletd/walletd"
+
+[dependencies]
+serde = { workspace = true }
+subtle = "2.5"  # SECURITY: Constant-time operations
+zeroize = { version = "1.8", features = ["derive"] }  # SECURITY: Secure memory cleanup

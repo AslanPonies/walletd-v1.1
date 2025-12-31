@@ -1,0 +1,18 @@
+[package]
+name = "walletd-error"
+version = "0.1.0"
+edition = "2021"
+description = "Unified error types for WalletD multi-chain wallet SDK"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/walletd/walletd"
+keywords = ["wallet", "cryptocurrency", "blockchain", "error"]
+categories = ["cryptography::cryptocurrencies"]
+
+[dependencies]
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"], optional = true }
+hex = "0.4"
+
+[features]
+default = []
+serde = ["dep:serde"]

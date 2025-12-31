@@ -1,0 +1,82 @@
+[package]
+name = "walletd"
+version = "0.3.0"
+edition = "2021"
+description = "Unified multi-chain cryptocurrency wallet SDK"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/walletd/walletd"
+keywords = ["wallet", "cryptocurrency", "blockchain", "bitcoin", "ethereum"]
+categories = ["cryptography::cryptocurrencies"]
+readme = "README.md"
+
+[features]
+# Default: core functionality only (minimal binary size)
+default = ["core"]
+
+# Core functionality (always included with any chain)
+core = ["dep:walletd-traits", "dep:walletd-core"]
+
+# Individual chain support - pick what you need
+bitcoin = ["core", "dep:walletd_bitcoin"]
+ethereum = ["core", "dep:walletd_ethereum"]
+solana = ["core", "dep:walletd_solana"]
+base = ["core", "dep:walletd_base"]
+arbitrum = ["core", "dep:walletd_arbitrum"]
+erc20 = ["ethereum", "dep:walletd_erc20"]
+icp = ["core", "dep:walletd_icp"]
+hedera = ["core", "dep:walletd_hedera"]
+monero = ["core", "dep:walletd_monero"]
+prasaga = ["core", "dep:walletd-prasaga-avio"]
+sui = ["core", "dep:walletd_sui"]
+aptos = ["core", "dep:walletd_aptos"]
+ton = ["core", "dep:walletd_ton"]
+
+# Chain groups for convenience
+evm = ["ethereum", "base", "arbitrum", "erc20"]
+move-chains = ["sui", "aptos"]
+privacy = ["monero"]
+all-chains = ["bitcoin", "ethereum", "solana", "base", "arbitrum", "erc20", "icp", "hedera", "monero", "prasaga", "sui", "aptos", "ton"]
+
+# Feature flags for optional functionality
+async-runtime = ["tokio"]
+serde-support = ["serde"]
+full = ["all-chains", "async-runtime", "serde-support"]
+
+[dependencies]
+# Core (always included when any chain is enabled)
+walletd-traits = { path = "../walletd-traits", version = "0.1", optional = true }
+walletd-core = { path = "../walletd-core", version = "1.1", optional = true }
+
+# Chain implementations (optional)
+walletd_bitcoin = { path = "../../coins/bitcoin", version = "0.2", optional = true }
+walletd_ethereum = { path = "../../coins/ethereum", version = "0.2", optional = true }
+walletd_solana = { path = "../../coins/solana", version = "0.2", optional = true }
+walletd_base = { path = "../../coins/base", version = "0.1", optional = true }
+walletd_arbitrum = { path = "../../coins/arbitrum", version = "0.1", optional = true }
+walletd_erc20 = { path = "../../coins/walletd_erc20", version = "0.1", optional = true }
+walletd_icp = { path = "../../coins/icp", version = "0.1", optional = true }
+walletd_hedera = { path = "../../coins/hedera", version = "0.2", optional = true }
+walletd_monero = { path = "../../coins/monero", version = "0.1", optional = true }
+walletd_sui = { path = "../../coins/sui", version = "0.1", optional = true }
+walletd_aptos = { path = "../../coins/aptos", version = "0.1", optional = true }
+walletd_ton = { path = "../../coins/ton", version = "0.1", optional = true }
+walletd-prasaga-avio = { path = "../../walletd-prasaga-avio", version = "0.1", optional = true }
+
+# Optional runtime/serialization
+tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "macros"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+serde_json = "1.0"
+bdk = { version = "0.30", features = ["keys-bip39"] }
+monero = "0.21"
+
+[[bench]]
+name = "wallet_benchmarks"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

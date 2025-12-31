@@ -1,0 +1,67 @@
+[package]
+name = "walletd-wasm"
+version = "0.1.0"
+edition = "2021"
+description = "WebAssembly bindings for WalletD multi-chain wallet SDK"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/walletd/walletd"
+keywords = ["wallet", "cryptocurrency", "wasm", "webassembly", "browser"]
+categories = ["cryptography::cryptocurrencies", "wasm"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+# Enable all chains for WASM
+full = ["ethereum", "bitcoin-keys", "monero-keys"]
+# Individual chain support
+ethereum = []
+bitcoin-keys = []
+monero-keys = []
+
+[dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = [
+    "console",
+    "Window",
+    "Crypto",
+    "SubtleCrypto",
+] }
+
+# Error handling in WASM
+console_error_panic_hook = { version = "0.1", optional = true }
+
+# Serialization for JS interop
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde-wasm-bindgen = "0.6"
+
+# Cryptography (WASM-compatible)
+sha2 = "0.10"
+sha3 = "0.10"
+hex = "0.4"
+getrandom = { version = "0.2", features = ["js"] }
+
+# HD key derivation (WASM-compatible subset)
+bip32 = "0.5"
+tiny-keccak = { version = "2.0", features = ["keccak"] }
+
+# Optional: secp256k1 for Ethereum/Bitcoin
+k256 = { version = "0.13", features = ["ecdsa"] }
+
+# Bitcoin address encoding
+ripemd = "0.1"
+bs58 = "0.5"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[profile.release]
+opt-level = "s"
+lto = true
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false

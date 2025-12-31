@@ -1,0 +1,24 @@
+[package]
+name = "walletd_monero_mnemonic"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["The WalletD Team"]
+description = "A library for generating and restoring Monero mnemonic seeds"
+homepage = "https://walletd.org/"
+repository = "https://github.com/walletd/walletd"
+readme = "README.md"
+categories = ["cryptography::cryptocurrencies"]
+
+[dependencies]
+walletd_mnemonics_core = { path = "../core", version = "0.2" }
+aligned = "0.4.1"
+crc = "3.0"
+curve25519-dalek = "4.1"
+enum-iterator = "1.2.0"
+hex = "0.4.2"
+rand = "0.8"
+sha3 = "0.10.6"
+thiserror = "1.0.39"
+serde = { version = "1.0.130", features = ["derive"] }
+

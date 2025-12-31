@@ -1,0 +1,44 @@
+[package]
+name = "walletd_monero"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["The WalletD Team"]
+description = "Monero walletd library"
+homepage = "https://walletd.org/"
+repository = "https://github.com/walletd/walletd"
+readme = "README.md"
+categories = ["cryptocurrencies"]
+
+[lib]
+name = "walletd_monero"
+path = "src/lib.rs"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { workspace = true }
+
+[dependencies]
+walletd_monero_mnemonic = { path = "../../mnemonics/monero", version = "0.1" }
+walletd_hd_key = { workspace = true }
+walletd_mnemonics_core = { path = "../../mnemonics/core", version = "0.2" }
+monero = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde-aux = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+hex = { workspace = true }
+rand = { workspace = true }
+reqwest = { workspace = true }
+sha2 = { workspace = true }
+curve25519-dalek = { workspace = true }
+base58-monero = "1.0.0"
+getrandom = { version = "0.2", features = ["js"] }
+hex-literal = "0.4"
+hmac = { workspace = true }
+lazy_static = "1.4"
+num = "0.4"
+tiny-keccak = "2.0"
+subtle = { version = "2", default-features = false }
+zeroize = { workspace = true }
+thiserror = { workspace = true }

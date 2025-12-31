@@ -1,0 +1,24 @@
+use walletd_monero::AddressType;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("Monero Transfer Example");
+
+    // Note: This is a simplified example
+    // The actual transfer would require:
+    // 1. Creating wallet from HD keys
+    // 2. Connecting to Monero node
+    // 3. Creating and signing transaction
+    // 4. Broadcasting transaction
+
+    let address_format = AddressType::Standard;
+    println!("Using address format: {address_format:?}");
+
+    println!("Transfer functionality requires:");
+    println!("- Valid HD keys");
+    println!("- Connection to Monero node");
+    println!("- Sufficient balance");
+    println!("- Valid recipient address");
+
+    Ok(())
+}

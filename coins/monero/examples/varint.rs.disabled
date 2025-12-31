@@ -1,0 +1,16 @@
+// Variable integer encoding example
+use walletd_monero::varint::{VarInt, VarIntEncoding};
+
+fn main() {
+    println!("VarInt Encoding Example");
+
+    // Create some test values
+    let values: Vec<u64> = vec![0, 127, 128, 255, 256, 16383, 16384];
+
+    println!("Testing VarInt encoding:");
+    for value in values {
+        let varint = VarInt(value);
+        let encoded = varint.encode_to_bytes();
+        println!("Value: {value} -> Encoded bytes: {encoded:?}");
+    }
+}
