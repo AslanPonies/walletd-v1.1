@@ -1,4 +1,5 @@
 [workspace]
+exclude = ["fuzz"]
 members = [
     "walletd_icp_cli",
     "coins/bitcoin",
