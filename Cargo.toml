@@ -25,6 +25,7 @@ members = [
     "crates/walletd",
     "crates/walletd-wasm",
     "crates/walletd-testing",
+    "crates/walletd-resilience",
     "coins/base",
     "coins/polygon",
     "coins/avalanche",

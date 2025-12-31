@@ -1,0 +1,17 @@
+[package]
+name = "walletd-resilience"
+version = "0.1.0"
+edition = "2021"
+description = "Production resilience patterns for WalletD - circuit breakers, retries, backoff"
+license = "MIT"
+
+[dependencies]
+tokio = { version = "1.35", features = ["time", "sync"] }
+thiserror = "1.0"
+tracing = "0.1"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tokio = { version = "1.35", features = ["full", "test-util"] }
