@@ -26,6 +26,9 @@ members = [
     "crates/walletd-wasm",
     "crates/walletd-testing",
     "coins/base",
+    "coins/polygon",
+    "coins/avalanche",
+    "coins/cardano",
     "walletd-prasaga-avio",
 ]
 resolver = "2"
