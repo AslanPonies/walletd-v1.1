@@ -1,0 +1,40 @@
+[package]
+name = "walletd_cosmos"
+version = "0.1.0"
+edition = "2021"
+description = "Cosmos (ATOM) wallet support for WalletD"
+license = "MIT"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+hex = "0.4"
+async-trait = "0.1"
+
+# Cryptography - Cosmos uses secp256k1
+secp256k1 = { version = "0.27", features = ["recovery"] }
+sha2 = "0.10"
+ripemd = "0.1"
+
+# HD wallet
+bip39 = "2.0"
+bip32 = "0.5"
+
+# Address encoding
+bech32 = "0.11"
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json"] }
+
+# Utilities
+rand = "0.8"
+log = "0.4"
+base64 = "0.22"
+
+walletd-traits = { path = "../../crates/walletd-traits" }
+
+[dev-dependencies]
+tokio-test = "0.4"

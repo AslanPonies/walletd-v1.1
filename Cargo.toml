@@ -30,6 +30,10 @@ members = [
     "coins/polygon",
     "coins/avalanche",
     "coins/cardano",
+    "coins/cosmos",
+    "coins/tron",
+    "coins/polkadot",
+    "coins/near",
     "walletd-prasaga-avio",
 ]
 resolver = "2"

@@ -387,12 +387,230 @@ impl TransactionBuilder {
     }
 }
 
+// ============================================================================
+// STAKING TRAITS
+// ============================================================================
+
+/// Information about a validator/stake pool
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ValidatorInfo {
+    /// Validator address or ID
+    pub address: String,
+    /// Validator name (if known)
+    pub name: Option<String>,
+    /// Commission rate (0.0 to 1.0)
+    pub commission: f64,
+    /// Total stake delegated to this validator
+    pub total_stake: Amount,
+    /// Validator status
+    pub status: ValidatorStatus,
+    /// Annual percentage yield (APY)
+    pub apy: Option<f64>,
+}
+
+/// Validator status
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ValidatorStatus {
+    /// Validator is active and producing blocks
+    Active,
+    /// Validator is inactive/jailed
+    Inactive,
+    /// Validator is unbonding
+    Unbonding,
+}
+
+/// Information about a stake/delegation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StakeInfo {
+    /// Validator being delegated to
+    pub validator: String,
+    /// Amount staked
+    pub amount: Amount,
+    /// Rewards earned (unclaimed)
+    pub rewards: Amount,
+    /// When the stake was created
+    pub staked_at: Option<u64>,
+    /// Status of the stake
+    pub status: StakeStatus,
+}
+
+/// Status of a stake
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum StakeStatus {
+    /// Stake is active and earning rewards
+    Active,
+    /// Stake is in unbonding period
+    Unbonding,
+    /// Stake has been fully unbonded
+    Unbonded,
+}
+
+/// Staking configuration for a chain
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StakingConfig {
+    /// Minimum stake amount
+    pub min_stake: Amount,
+    /// Unbonding period in seconds
+    pub unbonding_period_secs: u64,
+    /// Maximum validators a user can delegate to
+    pub max_validators: Option<u32>,
+    /// Whether rewards auto-compound
+    pub auto_compound: bool,
+}
+
+/// Trait for wallets that support staking
+#[async_trait]
+pub trait Stakable: Send + Sync {
+    /// Get staking configuration for this chain
+    async fn staking_config(&self) -> WalletResult<StakingConfig>;
+    
+    /// Get list of available validators
+    async fn validators(&self) -> WalletResult<Vec<ValidatorInfo>>;
+    
+    /// Get validator by address
+    async fn validator(&self, address: &str) -> WalletResult<ValidatorInfo>;
+    
+    /// Get current stakes/delegations for this wallet
+    async fn stakes(&self) -> WalletResult<Vec<StakeInfo>>;
+    
+    /// Get total staked amount
+    async fn total_staked(&self) -> WalletResult<Amount>;
+    
+    /// Get unclaimed rewards
+    async fn pending_rewards(&self) -> WalletResult<Amount>;
+    
+    /// Stake/delegate to a validator
+    async fn stake(&self, validator: &str, amount: Amount) -> WalletResult<TxHash>;
+    
+    /// Unstake/undelegate from a validator
+    async fn unstake(&self, validator: &str, amount: Amount) -> WalletResult<TxHash>;
+    
+    /// Claim staking rewards
+    async fn claim_rewards(&self) -> WalletResult<TxHash>;
+    
+    /// Redelegate from one validator to another
+    async fn redelegate(
+        &self,
+        from_validator: &str,
+        to_validator: &str,
+        amount: Amount,
+    ) -> WalletResult<TxHash>;
+}
+
+// ============================================================================
+// DEFI TRAITS
+// ============================================================================
+
+/// Token pair for swaps
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TokenPair {
+    /// Input token address/symbol
+    pub token_in: String,
+    /// Output token address/symbol
+    pub token_out: String,
+}
+
+/// Quote for a token swap
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SwapQuote {
+    /// Amount of input token
+    pub amount_in: Amount,
+    /// Expected amount of output token
+    pub amount_out: Amount,
+    /// Price impact percentage
+    pub price_impact: f64,
+    /// Estimated gas cost
+    pub gas_estimate: Amount,
+    /// Route/path for the swap
+    pub route: Vec<String>,
+    /// Quote expiration timestamp
+    pub expires_at: Option<u64>,
+}
+
+/// Trait for DeFi swap functionality
+#[async_trait]
+pub trait Swappable: Send + Sync {
+    /// Get a quote for swapping tokens
+    async fn quote_swap(
+        &self,
+        token_in: &str,
+        token_out: &str,
+        amount_in: Amount,
+        slippage: f64,
+    ) -> WalletResult<SwapQuote>;
+    
+    /// Execute a token swap
+    async fn swap(
+        &self,
+        token_in: &str,
+        token_out: &str,
+        amount_in: Amount,
+        min_amount_out: Amount,
+    ) -> WalletResult<TxHash>;
+    
+    /// Get supported tokens for swapping
+    async fn supported_tokens(&self) -> WalletResult<Vec<String>>;
+}
+
+/// Liquidity pool information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PoolInfo {
+    /// Pool address
+    pub address: String,
+    /// Token A in the pool
+    pub token_a: String,
+    /// Token B in the pool
+    pub token_b: String,
+    /// Reserve of token A
+    pub reserve_a: Amount,
+    /// Reserve of token B
+    pub reserve_b: Amount,
+    /// Pool APY
+    pub apy: Option<f64>,
+    /// Total value locked
+    pub tvl: Option<Amount>,
+}
+
+/// Trait for liquidity provision
+#[async_trait]
+pub trait LiquidityProvider: Send + Sync {
+    /// Get available liquidity pools
+    async fn pools(&self) -> WalletResult<Vec<PoolInfo>>;
+    
+    /// Get pool by address
+    async fn pool(&self, address: &str) -> WalletResult<PoolInfo>;
+    
+    /// Add liquidity to a pool
+    async fn add_liquidity(
+        &self,
+        pool: &str,
+        amount_a: Amount,
+        amount_b: Amount,
+        slippage: f64,
+    ) -> WalletResult<TxHash>;
+    
+    /// Remove liquidity from a pool
+    async fn remove_liquidity(
+        &self,
+        pool: &str,
+        lp_amount: Amount,
+        slippage: f64,
+    ) -> WalletResult<TxHash>;
+    
+    /// Get LP token balance for a pool
+    async fn lp_balance(&self, pool: &str) -> WalletResult<Amount>;
+}
+
 /// Prelude module for convenient imports
 pub mod prelude {
     pub use crate::{
         Amount, HDWallet, Network, Signable, Syncable, TokenWallet, Transferable,
         TransactionBuilder, TransactionStatus, TxHash, Wallet, WalletError, WalletResult,
         Exportable,
+        // Staking
+        Stakable, StakeInfo, StakeStatus, StakingConfig, ValidatorInfo, ValidatorStatus,
+        // DeFi
+        Swappable, SwapQuote, TokenPair, LiquidityProvider, PoolInfo,
     };
 }
 

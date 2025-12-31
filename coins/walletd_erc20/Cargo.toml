@@ -14,7 +14,7 @@ tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"], optiona
 serde = { version = "1", features = ["derive"], optional = true }
 
 [features]
-default = ["tokio"]
+default = ["tokio", "serde"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }

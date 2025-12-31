@@ -1,0 +1,37 @@
+[package]
+name = "walletd_near"
+version = "0.1.0"
+edition = "2021"
+description = "Near Protocol (NEAR) wallet support for WalletD"
+license = "MIT"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+hex = "0.4"
+async-trait = "0.1"
+
+# Cryptography - Near uses Ed25519
+ed25519-dalek = "2.1"
+sha2 = "0.10"
+
+# HD wallet
+bip39 = "2.0"
+
+# Address encoding
+bs58 = "0.5"
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json"] }
+
+# Utilities
+rand = "0.8"
+log = "0.4"
+
+walletd-traits = { path = "../../crates/walletd-traits" }
+
+[dev-dependencies]
+tokio-test = "0.4"
