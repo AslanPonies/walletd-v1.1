@@ -1,4 +1,4 @@
-//! Configuration for blockchain connections
+//! Configuration
 
 use serde::{Deserialize, Serialize};
 
@@ -10,15 +10,19 @@ pub struct WalletDConfig {
     pub monero: MoneroConfig,
     pub hedera: HederaConfig,
     pub icp: IcpConfig,
+    #[serde(default)]
     pub demo_mode: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BitcoinConfig {
-    pub network: String, // "mainnet", "testnet", "regtest"
+    pub network: String,
     pub rpc_url: String,
+    #[serde(default)]
     pub rpc_user: Option<String>,
+    #[serde(default)]
     pub rpc_password: Option<String>,
+    #[serde(default)]
     pub electrum_url: Option<String>,
 }
 
@@ -26,12 +30,13 @@ pub struct BitcoinConfig {
 pub struct EthereumConfig {
     pub chain_id: u64,
     pub rpc_url: String,
+    #[serde(default)]
     pub etherscan_api_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SolanaConfig {
-    pub cluster: String, // "mainnet-beta", "testnet", "devnet"
+    pub cluster: String,
     pub rpc_url: String,
 }
 
@@ -39,19 +44,21 @@ pub struct SolanaConfig {
 pub struct MoneroConfig {
     pub network: String,
     pub daemon_url: String,
+    #[serde(default)]
     pub wallet_rpc_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HederaConfig {
-    pub network: String, // "mainnet", "testnet"
+    pub network: String,
     pub operator_id: String,
     pub operator_key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IcpConfig {
-    pub network: String, // "ic", "local"
+    pub network: String,
+    #[serde(default)]
     pub identity_path: Option<String>,
 }
 
@@ -66,8 +73,8 @@ impl Default for WalletDConfig {
                 electrum_url: Some("ssl://electrum.blockstream.info:60002".to_string()),
             },
             ethereum: EthereumConfig {
-                chain_id: 11155111, // Sepolia
-                rpc_url: "https://eth-sepolia.g.alchemy.com/v2/demo".to_string(),
+                chain_id: 11155111,
+                rpc_url: "https://rpc.sepolia.org".to_string(),
                 etherscan_api_key: None,
             },
             solana: SolanaConfig {
@@ -75,14 +82,14 @@ impl Default for WalletDConfig {
                 rpc_url: "https://api.devnet.solana.com".to_string(),
             },
             monero: MoneroConfig {
-                network: "testnet".to_string(),
-                daemon_url: "http://localhost:28081".to_string(),
+                network: "stagenet".to_string(),
+                daemon_url: "http://localhost:38081".to_string(),
                 wallet_rpc_url: None,
             },
             hedera: HederaConfig {
                 network: "testnet".to_string(),
                 operator_id: "0.0.0".to_string(),
-                operator_key: "".to_string(),
+                operator_key: String::new(),
             },
             icp: IcpConfig {
                 network: "local".to_string(),
@@ -94,21 +101,15 @@ impl Default for WalletDConfig {
 }
 
 impl WalletDConfig {
-    /// Load config from file or create default
     pub fn load() -> Self {
-        if let Ok(config_str) = std::fs::read_to_string("walletd_config.json") {
-            serde_json::from_str(&config_str).unwrap_or_default()
-        } else {
-            let config = Self::default();
-            let _ = config.save();
-            config
-        }
+        std::fs::read_to_string("walletd_config.json")
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or_default()
     }
 
-    /// Save config to file
     pub fn save(&self) -> Result<(), std::io::Error> {
-        let config_str = serde_json::to_string_pretty(self)?;
-        std::fs::write("walletd_config.json", config_str)?;
-        Ok(())
+        let json = serde_json::to_string_pretty(self)?;
+        std::fs::write("walletd_config.json", json)
     }
 }

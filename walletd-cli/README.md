@@ -1,158 +1,95 @@
-# WalletD CLI - Integrated Edition
+# WalletD CLI v0.2.0 - Full SDK Integration
 
-**Version 0.2.0** - Full SDK integration for multi-chain wallet operations
+Multi-chain wallet CLI supporting **17+ blockchains** with:
+- ✅ HD wallet derivation (BIP-39/44/84)
+- ✅ Real transaction broadcasting
+- ✅ Balance checking via blockchain APIs
+- ✅ Unified mnemonic for all chains
 
-## Overview
+## Supported Chains
 
-This CLI is a **true drop-in replacement** for `walletd-icp-cli` that:
+| # | Chain | Symbol | HD Path | Features |
+|---|-------|--------|---------|----------|
+| 1 | Bitcoin | BTC | m/84'/0'/0'/0/0 | Send, Balance, UTXO |
+| 2 | Ethereum | ETH | m/44'/60'/0'/0/0 | Send, Balance, ERC-20 |
+| 3 | Solana | SOL | m/44'/501'/0'/0' | Balance, Airdrop |
+| 4 | Hedera | HBAR | - | Balance |
+| 5 | Monero | XMR | - | Address gen |
+| 6 | ICP | ICP | - | Principal ID |
+| 7 | ERC-20 | Various | (uses ETH) | Token support |
+| 8 | Base | ETH | (uses ETH) | L2 support |
+| 9 | Prasaga | SAGA | - | Coming soon |
+| 10 | Polygon | POL | (uses ETH) | Send, Balance |
+| 11 | Avalanche | AVAX | (uses ETH) | Send, Balance |
+| 12 | Arbitrum | ETH | (uses ETH) | Send, Balance |
+| 13 | Cardano | ADA | m/1852'/1815'/0'/0/0 | Address gen |
+| 14 | Cosmos | ATOM | m/44'/118'/0'/0/0 | Balance |
+| 15 | Polkadot | DOT | m/44'/354'/0'/0'/0' | Address gen |
+| 16 | Near | NEAR | m/44'/397'/0' | Balance |
+| 17 | Tron | TRX | m/44'/195'/0'/0/0 | Balance |
+| 18 | SUI | SUI | m/44'/784'/0'/0'/0' | Balance |
+| 19 | Aptos | APT | m/44'/637'/0'/0'/0' | Balance |
+| 20 | TON | TON | m/44'/607'/0' | Balance |
 
-1. **Uses the WalletD SDK crates** directly (not duplicating code)
-2. **Performs real wallet operations** on actual blockchains
-3. **Maintains 100% backward compatibility** with the original menu flow
-4. **Extends to 17+ chains** (when SDK crates are available)
+## Installation
+
+```bash
+# In your walletd repo:
+rm -rf walletd-cli
+# Copy this entire walletd-cli directory
+cargo build -p walletd-cli --release
+```
+
+## Usage
+
+```bash
+./target/release/walletd
+```
 
 ## Architecture
 
 ```
 walletd-cli/
-├── Cargo.toml                    # Dependencies on SDK crates
+├── Cargo.toml
 ├── src/
-│   ├── main.rs                   # CLI entry point & menu handling
-│   ├── config.rs                 # Config (compatible with original)
-│   ├── types.rs                  # Shared types
-│   └── wallet_integration/       # Real wallet implementations
-│       ├── mod.rs                # Central WalletManager
-│       ├── bitcoin_real.rs       # Bitcoin operations
-│       ├── ethereum_real.rs      # Ethereum operations
-│       ├── solana_real.rs        # Solana operations
-│       ├── hedera_real.rs        # Hedera operations
-│       ├── monero_real.rs        # Monero operations
-│       └── icp_real.rs           # ICP operations
+│   ├── main.rs                    # CLI entry point
+│   ├── config.rs                  # Configuration
+│   ├── types.rs                   # Shared types
+│   └── wallet_integration/
+│       ├── mod.rs                 # Central WalletManager
+│       ├── hd_derivation.rs       # BIP-39/44/84 derivation
+│       ├── bitcoin_wallet.rs      # BTC implementation
+│       ├── ethereum_wallet.rs     # ETH implementation
+│       ├── evm_wallet.rs          # Polygon/Avalanche/Base/Arbitrum
+│       ├── solana_wallet.rs       # SOL implementation
+│       ├── hedera_wallet.rs       # HBAR implementation
+│       ├── monero_wallet.rs       # XMR implementation
+│       ├── icp_wallet.rs          # ICP implementation
+│       ├── cardano_wallet.rs      # ADA implementation
+│       ├── cosmos_wallet.rs       # ATOM implementation
+│       ├── polkadot_wallet.rs     # DOT implementation
+│       ├── near_wallet.rs         # NEAR implementation
+│       ├── tron_wallet.rs         # TRX implementation
+│       ├── sui_wallet.rs          # SUI implementation
+│       ├── aptos_wallet.rs        # APT implementation
+│       └── ton_wallet.rs          # TON implementation
 ```
 
-## Integration with WalletD Repo
+## HD Derivation
 
-### Step 1: Copy to Repository
+All wallets derive from a single 24-word mnemonic:
 
-```bash
-# Copy this directory to the walletd repo root
-cp -r walletd-cli /path/to/walletd/
-```
+```rust
+// Generate new mnemonic
+let mnemonic = manager.generate_mnemonic()?;
 
-### Step 2: Update Workspace Cargo.toml
+// Or import existing
+manager.set_mnemonic("your 24 words here")?;
 
-Add to `walletd/Cargo.toml`:
-
-```toml
-[workspace]
-members = [
-    # Existing members...
-    "coins/bitcoin",
-    "coins/ethereum",
-    "coins/solana",
-    # ... etc
-    
-    # Add the CLI
-    "walletd-cli",
-]
-```
-
-### Step 3: Update Shell Script (Optional)
-
-Update `walletd-cli` shell script to use the new binary:
-
-```bash
-#!/bin/bash
-exec "$(dirname "$0")/walletd-cli/target/release/walletd" "$@"
-```
-
-### Step 4: Build
-
-```bash
-cd walletd
-cargo build --release -p walletd-cli
-```
-
-## Features
-
-### Real Wallet Operations
-
-- **Create wallets** with secure key generation
-- **Check balances** via blockchain APIs
-- **Send transactions** with proper signing
-- **View on explorers** with direct links
-
-### Supported Chains (Core)
-
-| # | Chain | Network | API |
-|---|-------|---------|-----|
-| 1 | Bitcoin | Testnet/Mainnet | Blockstream |
-| 2 | Ethereum | Sepolia/Mainnet | RPC + Etherscan |
-| 3 | Solana | Devnet/Mainnet | JSON-RPC |
-| 4 | Hedera | Testnet/Mainnet | Portal API |
-| 5 | Monero | Stagenet/Mainnet | Wallet RPC |
-| 6 | ICP | Local/IC | Agent |
-| 7 | ERC-20 | Multi-chain | Contracts |
-| 8 | Base | Sepolia/Mainnet | RPC |
-| 9 | Prasaga | Testnet | Coming |
-
-### Extended Chains (When SDK Crates Exist)
-
-10-20: Polygon, Avalanche, Arbitrum, Cardano, Cosmos, Polkadot, Near, Tron, SUI, Aptos, TON
-
-## Configuration
-
-Uses `walletd_config.json` (fully compatible with original):
-
-```json
-{
-  "bitcoin": {
-    "network": "testnet",
-    "rpc_url": "http://localhost:18332",
-    "electrum_url": "ssl://electrum.blockstream.info:60002"
-  },
-  "ethereum": {
-    "chain_id": 11155111,
-    "rpc_url": "https://eth-sepolia.g.alchemy.com/v2/demo"
-  },
-  ...
-}
-```
-
-## SDK Integration Points
-
-The CLI integrates with SDK crates via Cargo dependencies:
-
-```toml
-walletd_bitcoin = { path = "../coins/bitcoin" }
-walletd_ethereum = { path = "../coins/ethereum" }
-walletd_solana = { path = "../coins/solana" }
-# etc.
-```
-
-Each `*_real.rs` module wraps SDK functionality with CLI-friendly interfaces.
-
-## Backward Compatibility
-
-✅ Same binary names (`walletd`, `walletd-icp-cli`)
-✅ Same mode selection (Testnet/Mainnet/Demo)
-✅ Same menu numbers (1-9 for original chains)
-✅ Same config file format
-✅ Same initialization flow
-
-## Development
-
-```bash
-# Run in development
-cargo run --bin walletd
-
-# Run tests
-cargo test
-
-# Build release
-cargo build --release
+// Initialize all wallets
+manager.init_all_from_mnemonic().await?;
 ```
 
 ## License
 
-MIT OR Apache-2.0 (same as WalletD)
+MIT OR Apache-2.0
