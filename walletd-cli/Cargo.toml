@@ -1,0 +1,112 @@
+[package]
+name = "walletd-cli"
+version = "0.2.0"
+edition = "2021"
+description = "WalletD Multi-Chain CLI - Integrated with SDK"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/walletd/walletd"
+keywords = ["cryptocurrency", "wallet", "blockchain", "cli", "multi-chain"]
+categories = ["command-line-utilities", "cryptography::cryptocurrencies"]
+
+[[bin]]
+name = "walletd"
+path = "src/main.rs"
+
+[[bin]]
+name = "walletd-icp-cli"
+path = "src/main.rs"
+
+[dependencies]
+# =============================================================================
+# WalletD SDK Crates - Core blockchain integrations
+# =============================================================================
+walletd_bitcoin = { path = "../coins/bitcoin" }
+walletd_ethereum = { path = "../coins/ethereum" }
+walletd_solana = { path = "../coins/solana" }
+walletd_hedera = { path = "../coins/hedera" }
+walletd_monero = { path = "../coins/monero" }
+walletd_icp = { path = "../coins/icp" }
+walletd_base = { path = "../coins/base" }
+walletd_erc20 = { path = "../coins/walletd_erc20" }
+
+# =============================================================================
+# Extended Chain Crates (from our v1.3.x work)
+# These paths assume they've been added to the workspace
+# =============================================================================
+# walletd_polygon = { path = "../coins/polygon", optional = true }
+# walletd_avalanche = { path = "../coins/avalanche", optional = true }
+# walletd_cardano = { path = "../coins/cardano", optional = true }
+# walletd_cosmos = { path = "../coins/cosmos", optional = true }
+# walletd_polkadot = { path = "../coins/polkadot", optional = true }
+# walletd_near = { path = "../coins/near", optional = true }
+# walletd_tron = { path = "../coins/tron", optional = true }
+# walletd_sui = { path = "../coins/sui", optional = true }
+# walletd_aptos = { path = "../coins/aptos", optional = true }
+# walletd_ton = { path = "../coins/ton", optional = true }
+# walletd_arbitrum = { path = "../coins/arbitrum", optional = true }
+
+# =============================================================================
+# Async runtime
+# =============================================================================
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+
+# =============================================================================
+# Serialization & Configuration
+# =============================================================================
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+dotenvy = "0.15"
+
+# =============================================================================
+# Error handling
+# =============================================================================
+anyhow = "1.0"
+thiserror = "1.0"
+
+# =============================================================================
+# Cryptography basics
+# =============================================================================
+bitcoin = "0.31"
+ethers = "2.0"
+bs58 = "0.5"
+hex = "0.4"
+sha2 = "0.10"
+ed25519-dalek = "2.0"
+
+# =============================================================================
+# HTTP client for blockchain APIs
+# =============================================================================
+reqwest = { version = "0.11", features = ["json"] }
+
+# =============================================================================
+# Utilities
+# =============================================================================
+chrono = { version = "0.4", features = ["serde"] }
+once_cell = "1.19"
+lazy_static = "1.4"
+rand = "0.8"
+uuid = { version = "1.6", features = ["v4"] }
+dirs = "5.0"
+
+# =============================================================================
+# ICP specific
+# =============================================================================
+candid = "0.10"
+ic-agent = { version = "0.31", features = ["pem", "reqwest"] }
+ic-ledger-types = "0.9"
+
+# =============================================================================
+# Hedera specific
+# =============================================================================
+hedera = "0.28"
+
+[dev-dependencies]
+tempfile = "3.8"
+mockito = "0.31"
+
+[features]
+default = ["core-chains"]
+core-chains = []  # BTC, ETH, SOL, HBAR, XMR, ICP, Base, ERC20
+extended-chains = []  # Polygon, Avalanche, Cardano, etc.
+all-chains = ["core-chains", "extended-chains"]
