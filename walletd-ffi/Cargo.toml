@@ -1,0 +1,22 @@
+[package]
+name = "walletd-ffi"
+version = "1.4.0"
+edition = "2021"
+description = "FFI bindings for WalletD SDK (iOS/Android)"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+walletd-broadcast = { path = "../walletd-broadcast" }
+walletd-hardware = { path = "../walletd-hardware" }
+walletd-multisig = { path = "../walletd-multisig" }
+walletd-staking = { path = "../walletd-staking" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.35", features = ["rt-multi-thread"] }
+once_cell = "1.19"
+
+[build-dependencies]
+cbindgen = "0.26"

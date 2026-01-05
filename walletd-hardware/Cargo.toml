@@ -1,0 +1,48 @@
+[package]
+name = "walletd-hardware"
+version = "1.4.0"
+edition = "2021"
+authors = ["WalletD Team"]
+description = "Hardware wallet support for WalletD SDK (Ledger, Trezor)"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/walletd/walletd"
+keywords = ["cryptocurrency", "hardware-wallet", "ledger", "trezor"]
+categories = ["cryptography::cryptocurrencies"]
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+async-trait = "0.1"
+
+# HID communication
+hidapi = "2.5"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Crypto
+secp256k1 = { version = "0.28", features = ["serde"] }
+k256 = { version = "0.13", features = ["ecdsa"] }
+sha2 = "0.10"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Logging
+tracing = "0.1"
+
+# Hex encoding
+hex = "0.4"
+
+# Bitcoin paths
+bitcoin = { version = "0.31", features = ["serde"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[features]
+default = ["ledger", "trezor"]
+ledger = []
+trezor = []

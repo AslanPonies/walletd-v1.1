@@ -1,0 +1,18 @@
+[package]
+name = "walletd-multisig"
+version = "1.4.0"
+edition = "2021"
+description = "Multi-signature wallet support for WalletD SDK"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+async-trait = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+hex = "0.4"
+sha2 = "0.10"
+secp256k1 = { version = "0.28", features = ["serde", "recovery"] }
+bitcoin = { version = "0.31", features = ["serde"] }
+k256 = { version = "0.13", features = ["ecdsa"] }

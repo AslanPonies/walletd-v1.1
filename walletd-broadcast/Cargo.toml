@@ -1,0 +1,63 @@
+[package]
+name = "walletd-broadcast"
+version = "1.4.0"
+edition = "2021"
+authors = ["WalletD Team"]
+description = "Multi-chain transaction broadcasting for WalletD SDK"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/walletd/walletd"
+keywords = ["cryptocurrency", "blockchain", "wallet", "transactions"]
+categories = ["cryptography::cryptocurrencies"]
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# HTTP clients
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Logging
+tracing = "0.1"
+
+# Hex encoding
+hex = "0.4"
+
+# Base64
+base64 = "0.21"
+
+# Bitcoin
+bitcoin = { version = "0.31", features = ["serde"] }
+
+# Ethereum
+ethers = { version = "2.0", features = ["rustls"] }
+
+# Solana
+solana-sdk = "1.17"
+solana-client = "1.17"
+
+# Retry logic
+backoff = { version = "0.4", features = ["tokio"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockito = "1.2"
+
+[features]
+default = ["all-chains"]
+all-chains = ["bitcoin-broadcast", "ethereum-broadcast", "solana-broadcast", "evm-broadcast", "cosmos-broadcast", "substrate-broadcast"]
+bitcoin-broadcast = []
+ethereum-broadcast = []
+solana-broadcast = []
+evm-broadcast = []
+cosmos-broadcast = []
+substrate-broadcast = []
