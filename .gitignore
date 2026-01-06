@@ -31,3 +31,4 @@ Cargo.lock
 
 # NodeJS modules
 node_modules/walletd-cli/target/
+walletd-cli/target/
