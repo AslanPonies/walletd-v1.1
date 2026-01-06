@@ -30,4 +30,4 @@ Cargo.lock
 .env
 
 # NodeJS modules
-node_modules/
+node_modules/walletd-cli/target/
