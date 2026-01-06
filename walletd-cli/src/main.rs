@@ -1,375 +1,531 @@
-//! WalletD Multi-Chain CLI v0.2.0
+//! WalletD CLI - Multi-chain cryptocurrency wallet
 //!
-//! Full SDK integration with 17+ blockchains, HD derivation, and transaction broadcasting.
+//! Compatible with the original walletd-icp-cli interface
+//! Extended to support 17+ blockchain networks
 
 mod config;
 mod types;
 mod wallet_integration;
 
-use config::WalletDConfig;
-use types::{CliResponse, WalletMode};
-use wallet_integration::WALLET_MANAGER;
+use anyhow::{anyhow, Result};
+use colored::*;
+use dialoguer::{Select, Input, Confirm};
 use std::io::{self, Write};
 
-const VERSION: &str = "0.2.0";
+use config::WalletConfig;
+use types::{Chain, WalletMode};
+use wallet_integration::WalletManager;
+
+const VERSION: &str = "0.2.1";
+const BANNER: &str = r#"
+╦ ╦┌─┐┬  ┬  ┌─┐┌┬┐╔╦╗
+║║║├─┤│  │  ├┤  │  ║║
+╚╩╝┴ ┴┴─┘┴─┘└─┘ ┴ ═╩╝
+Multi-Chain Wallet SDK
+"#;
 
 #[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
+async fn main() -> Result<()> {
+    // Initialize logging
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
+    // Print banner
+    println!("{}", BANNER.cyan().bold());
+    println!("Version {} - Supporting 17+ Blockchains\n", VERSION.yellow());
+    
+    // Mode selection
+    let mode = select_mode()?;
+    
+    println!("\n{} Mode Selected\n", mode.as_str().green().bold());
+    
+    // Create wallet manager
+    let mut manager = WalletManager::new(mode)?;
+    
+    // Initialize wallet (generate or import mnemonic)
+    initialize_wallet(&mut manager)?;
+    
+    // Main menu loop
     loop {
-        print_banner();
-        let mode = select_mode();
-        
-        // Update config
-        let mut config = WalletDConfig::load();
-        update_config(&mut config, &mode);
-        let _ = config.save();
-        
-        // Update manager
-        {
-            let mut manager = WALLET_MANAGER.write().await;
-            manager.config = config.clone();
-            manager.mode = mode.clone();
-        }
-        
-        print_mode_info(&mode);
-        
-        // Initialize wallets
-        if mode != WalletMode::Demo {
-            let mut manager = WALLET_MANAGER.write().await;
-            if let Err(e) = manager.init_all().await {
-                eprintln!("Warning: {}", e);
+        match main_menu(&manager).await {
+            Ok(should_exit) => {
+                if should_exit {
+                    println!("\n{}", "Thank you for using WalletD!".green());
+                    break;
+                }
             }
-        } else {
-            println!("✅ Demo mode - no network connections");
+            Err(e) => {
+                println!("{} {}", "Error:".red(), e);
+            }
+        }
+    }
+    
+    Ok(())
+}
+
+fn select_mode() -> Result<WalletMode> {
+    println!("Select Network Mode:\n");
+    
+    let options = vec![
+        "1. Testnet  - For development and testing",
+        "2. Mainnet  - Real transactions (use with caution!)",
+        "3. Demo     - Simulated operations",
+    ];
+    
+    let selection = Select::new()
+        .items(&options)
+        .default(0)
+        .interact()?;
+    
+    Ok(match selection {
+        0 => WalletMode::Testnet,
+        1 => WalletMode::Mainnet,
+        2 => WalletMode::Demo,
+        _ => WalletMode::Testnet,
+    })
+}
+
+fn initialize_wallet(manager: &mut WalletManager) -> Result<()> {
+    println!("\n{}", "Wallet Initialization".cyan().bold());
+    println!("─────────────────────\n");
+    
+    let options = vec![
+        "1. Generate new wallet (creates new mnemonic)",
+        "2. Import existing wallet (enter mnemonic)",
+    ];
+    
+    let selection = Select::new()
+        .items(&options)
+        .default(0)
+        .interact()?;
+    
+    let mnemonic = match selection {
+        0 => {
+            // Generate new mnemonic
+            let mnemonic = WalletManager::generate_mnemonic()?;
+            println!("\n{}", "⚠️  IMPORTANT: Write down your recovery phrase!".yellow().bold());
+            println!("{}", "─".repeat(50));
+            println!("\n{}\n", mnemonic.green());
+            println!("{}", "─".repeat(50));
+            println!("{}", "Store this safely - you'll need it to recover your wallet.".yellow());
+            
+            // Confirm user has saved it
+            if !Confirm::new()
+                .with_prompt("Have you safely stored your recovery phrase?")
+                .default(false)
+                .interact()? 
+            {
+                println!("{}", "Please write down your recovery phrase before continuing.".red());
+                return Err(anyhow!("User did not confirm mnemonic backup"));
+            }
+            
+            mnemonic
+        }
+        1 => {
+            // Import existing mnemonic
+            println!("\nEnter your 12 or 24 word recovery phrase:");
+            let mnemonic: String = Input::new()
+                .with_prompt("Mnemonic")
+                .interact_text()?;
+            
+            mnemonic
+        }
+        _ => return Err(anyhow!("Invalid selection")),
+    };
+    
+    // Initialize all chain wallets from mnemonic
+    println!("\n{}", "Initializing wallets...".cyan());
+    manager.init_from_mnemonic(&mnemonic)?;
+    
+    println!("{}", "✓ All wallets initialized successfully!".green());
+    
+    // Show addresses
+    println!("\n{}", "Your Wallet Addresses:".cyan().bold());
+    println!("{}", "─".repeat(60));
+    
+    for chain in Chain::original_chains() {
+        if let Some(addr) = manager.get_address(*chain) {
+            println!("{:<12} {}", 
+                format!("{}:", chain.symbol()).yellow(),
+                truncate_address(&addr, 20)
+            );
+        }
+    }
+    
+    println!("{}", "─".repeat(60));
+    println!("{}", "(Extended chains available in chain menu)".dimmed());
+    
+    Ok(())
+}
+
+fn truncate_address(addr: &str, max_len: usize) -> String {
+    if addr.len() <= max_len {
+        addr.to_string()
+    } else {
+        format!("{}...{}", &addr[..8], &addr[addr.len()-8..])
+    }
+}
+
+async fn main_menu(manager: &WalletManager) -> Result<bool> {
+    println!("\n{}", "═".repeat(50));
+    println!("{}", "Main Menu".cyan().bold());
+    println!("{}", "═".repeat(50));
+    
+    let mut options = vec![
+        " 1. Bitcoin (BTC)".to_string(),
+        " 2. Ethereum (ETH)".to_string(),
+        " 3. Solana (SOL)".to_string(),
+        " 4. Hedera (HBAR)".to_string(),
+        " 5. Monero (XMR)".to_string(),
+        " 6. Internet Computer (ICP)".to_string(),
+        " 7. ERC-20 Tokens".to_string(),
+        " 8. Base L2 (BASE)".to_string(),
+        " 9. Prasaga (PRA)".to_string(),
+        "10. More Chains →".to_string(),
+        "─────────────────".to_string(),
+        "11. Portfolio Overview".to_string(),
+        "12. Tools & Utilities".to_string(),
+        "13. Settings".to_string(),
+        "14. Exit".to_string(),
+    ];
+    
+    let selection = Select::new()
+        .items(&options)
+        .default(0)
+        .interact()?;
+    
+    match selection {
+        0..=8 => {
+            // Original chains (1-9)
+            let chain = Chain::from_menu_number((selection + 1) as u8)
+                .ok_or_else(|| anyhow!("Invalid chain selection"))?;
+            chain_menu(manager, chain).await?;
+        }
+        9 => {
+            // Extended chains menu
+            extended_chains_menu(manager).await?;
+        }
+        10 => {
+            // Separator - do nothing
+        }
+        11 => {
+            // Portfolio overview
+            portfolio_overview(manager).await?;
+        }
+        12 => {
+            // Tools menu
+            tools_menu(manager).await?;
+        }
+        13 => {
+            // Settings
+            settings_menu(manager)?;
+        }
+        14 => {
+            // Exit
+            return Ok(true);
+        }
+        _ => {}
+    }
+    
+    Ok(false)
+}
+
+async fn chain_menu(manager: &WalletManager, chain: Chain) -> Result<()> {
+    loop {
+        println!("\n{}", "═".repeat(50));
+        println!("{} {}", chain.name().cyan().bold(), format!("({})", chain.symbol()).dimmed());
+        println!("{}", "═".repeat(50));
+        
+        // Show address
+        if let Some(addr) = manager.get_address(chain) {
+            println!("Address: {}", addr.green());
         }
         
-        let mut restart = false;
+        let options = vec![
+            "1. View Balance",
+            "2. View Address",
+            "3. Send Transaction",
+            "4. Receive (Show QR)",
+            "5. Transaction History",
+            "6. Back to Main Menu",
+        ];
         
-        loop {
-            print_menu(&mode);
-            print!("\nYour choice: ");
+        let selection = Select::new()
+            .items(&options)
+            .default(0)
+            .interact()?;
+        
+        match selection {
+            0 => {
+                // View balance
+                println!("\n{}", "Fetching balance...".cyan());
+                match manager.get_balance(chain).await {
+                    Ok(balance) => println!("Balance: {}", balance.green()),
+                    Err(e) => println!("{} {}", "Error:".red(), e),
+                }
+            }
+            1 => {
+                // View address
+                if let Some(addr) = manager.get_address(chain) {
+                    println!("\n{}", "Your Address:".cyan());
+                    println!("{}", addr.green());
+                    println!("\n{}", "Copy and share this address to receive funds.".dimmed());
+                }
+            }
+            2 => {
+                // Send transaction
+                send_transaction_menu(manager, chain).await?;
+            }
+            3 => {
+                // Receive - show QR code placeholder
+                if let Some(addr) = manager.get_address(chain) {
+                    println!("\n{}", "Receive Address:".cyan());
+                    println!("{}", addr.green());
+                    println!("\n{}", "[QR Code would be displayed here]".dimmed());
+                }
+            }
+            4 => {
+                // Transaction history
+                println!("\n{}", "Transaction history not yet implemented.".yellow());
+            }
+            5 => {
+                // Back
+                break;
+            }
+            _ => {}
+        }
+    }
+    
+    Ok(())
+}
+
+async fn send_transaction_menu(manager: &WalletManager, chain: Chain) -> Result<()> {
+    println!("\n{}", "Send Transaction".cyan().bold());
+    println!("{}", "─".repeat(30));
+    
+    // Get recipient address
+    let to: String = Input::new()
+        .with_prompt("Recipient address")
+        .interact_text()?;
+    
+    // Get amount
+    let amount: String = Input::new()
+        .with_prompt(format!("Amount ({})", chain.symbol()))
+        .interact_text()?;
+    
+    // Confirm
+    println!("\n{}", "Transaction Details:".yellow());
+    println!("  To: {}", to);
+    println!("  Amount: {} {}", amount, chain.symbol());
+    
+    if manager.mode.is_mainnet() {
+        println!("\n{}", "⚠️  WARNING: This is a MAINNET transaction!".red().bold());
+    }
+    
+    if !Confirm::new()
+        .with_prompt("Confirm transaction?")
+        .default(false)
+        .interact()? 
+    {
+        println!("{}", "Transaction cancelled.".yellow());
+        return Ok(());
+    }
+    
+    // Send transaction
+    println!("\n{}", "Sending transaction...".cyan());
+    
+    match manager.send_transaction(chain, &to, &amount).await {
+        Ok(tx_hash) => {
+            println!("\n{}", "✓ Transaction sent!".green().bold());
+            println!("TX Hash: {}", tx_hash);
+        }
+        Err(e) => {
+            println!("\n{} {}", "Transaction failed:".red(), e);
+        }
+    }
+    
+    Ok(())
+}
+
+async fn extended_chains_menu(manager: &WalletManager) -> Result<()> {
+    loop {
+        println!("\n{}", "═".repeat(50));
+        println!("{}", "Extended Chains".cyan().bold());
+        println!("{}", "═".repeat(50));
+        
+        let options = vec![
+            "10. Polygon (POL)",
+            "11. Avalanche (AVAX)",
+            "12. Arbitrum (ARB)",
+            "13. Cardano (ADA)",
+            "14. Cosmos (ATOM)",
+            "15. Polkadot (DOT)",
+            "16. NEAR Protocol (NEAR)",
+            "17. Tron (TRX)",
+            "18. Sui (SUI)",
+            "19. Aptos (APT)",
+            "20. TON",
+            "─────────────────",
+            "Back to Main Menu",
+        ];
+        
+        let selection = Select::new()
+            .items(&options)
+            .default(0)
+            .interact()?;
+        
+        if selection == 11 || selection == 12 {
+            break;
+        }
+        
+        let chain = match selection {
+            0 => Chain::Polygon,
+            1 => Chain::Avalanche,
+            2 => Chain::Arbitrum,
+            3 => Chain::Cardano,
+            4 => Chain::Cosmos,
+            5 => Chain::Polkadot,
+            6 => Chain::Near,
+            7 => Chain::Tron,
+            8 => Chain::Sui,
+            9 => Chain::Aptos,
+            10 => Chain::Ton,
+            _ => continue,
+        };
+        
+        chain_menu(manager, chain).await?;
+    }
+    
+    Ok(())
+}
+
+async fn portfolio_overview(manager: &WalletManager) -> Result<()> {
+    println!("\n{}", "═".repeat(60));
+    println!("{}", "Portfolio Overview".cyan().bold());
+    println!("{}", "═".repeat(60));
+    
+    println!("\n{}", "Fetching balances across all chains...".cyan());
+    
+    for chain in Chain::all() {
+        if manager.is_initialized(*chain) {
+            print!("{:<15}", format!("{}:", chain.symbol()));
             io::stdout().flush()?;
             
-            let mut choice = String::new();
-            io::stdin().read_line(&mut choice)?;
-            
-            match handle_choice(choice.trim(), &mode).await {
-                Ok(CliResponse::Exit) => {
-                    println!("\n👋 Thank you for using WalletD!");
-                    return Ok(());
-                }
-                Ok(CliResponse::ChangeMode) => { restart = true; break; }
-                Ok(CliResponse::Swap) => { handle_swap(&mode).await; }
-                Ok(CliResponse::Continue) => {}
-                Err(e) => eprintln!("Error: {}", e),
+            match manager.get_balance(*chain).await {
+                Ok(balance) => println!("{}", balance.green()),
+                Err(_) => println!("{}", "Unable to fetch".dimmed()),
             }
         }
-        
-        if restart { println!("\n🔄 Changing mode...\n"); }
     }
+    
+    println!("\n{}", "─".repeat(60));
+    println!("{}", "Press Enter to continue...".dimmed());
+    
+    let _: String = Input::new()
+        .allow_empty(true)
+        .interact_text()?;
+    
+    Ok(())
 }
 
-fn print_banner() {
-    println!("\n    ██╗    ██╗  █████╗  ██╗      ██╗      ███████╗ ████████╗ ██████╗  ");
-    println!("    ██║    ██║ ██╔══██╗ ██║      ██║      ██╔════╝ ╚══██╔══╝ ██╔══██╗ ");
-    println!("    ██║ █╗ ██║ ███████║ ██║      ██║      █████╗      ██║    ██║  ██║ ");
-    println!("    ██║███╗██║ ██╔══██║ ██║      ██║      ██╔══╝      ██║    ██║  ██║ ");
-    println!("    ╚███╔███╔╝ ██║  ██║ ███████╗ ███████╗ ███████╗    ██║    ██████╔╝ ");
-    println!("     ╚══╝╚══╝  ╚═╝  ╚═╝ ╚══════╝ ╚══════╝ ╚══════╝    ╚═╝    ╚═════╝  ");
-    println!("\n              Multi-Chain SDK v{} - 17+ Blockchains\n", VERSION);
-}
-
-fn select_mode() -> WalletMode {
-    println!("Select operating mode:");
-    println!("  [1] 🧪 Testnet (Recommended)");
-    println!("  [2] ⚡ Mainnet (Real money!)");
-    println!("  [3] 📌 Demo (UI only)");
-    print!("\nChoice (1): ");
-    io::stdout().flush().unwrap();
-    
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
-    
-    match input.trim() {
-        "2" => {
-            print!("⚠️  Mainnet uses real money. Confirm? (yes/N): ");
-            io::stdout().flush().unwrap();
-            let mut confirm = String::new();
-            io::stdin().read_line(&mut confirm).unwrap();
-            if confirm.trim().to_lowercase() == "yes" { WalletMode::Mainnet } 
-            else { println!("→ Using Testnet"); WalletMode::Testnet }
-        }
-        "3" => WalletMode::Demo,
-        _ => WalletMode::Testnet,
-    }
-}
-
-fn update_config(config: &mut WalletDConfig, mode: &WalletMode) {
-    match mode {
-        WalletMode::Testnet => {
-            config.demo_mode = false;
-            config.bitcoin.network = "testnet".to_string();
-            config.ethereum.chain_id = 11155111;
-            config.solana.cluster = "devnet".to_string();
-        }
-        WalletMode::Mainnet => {
-            config.demo_mode = false;
-            config.bitcoin.network = "mainnet".to_string();
-            config.ethereum.chain_id = 1;
-            config.solana.cluster = "mainnet-beta".to_string();
-        }
-        WalletMode::Demo => { config.demo_mode = true; }
-    }
-}
-
-fn print_mode_info(mode: &WalletMode) {
-    match mode {
-        WalletMode::Testnet => println!("\n🧪 TESTNET MODE - Free test tokens\n"),
-        WalletMode::Mainnet => println!("\n⚡ MAINNET MODE - Real money!\n"),
-        WalletMode::Demo => println!("\n📌 DEMO MODE - UI testing\n"),
-    }
-}
-
-fn print_menu(mode: &WalletMode) {
-    let w = if *mode == WalletMode::Mainnet { "⚠️" } else { "" };
-    
-    println!("\n═══════════════════════════════════════════════════");
-    println!("              SELECT BLOCKCHAIN");
-    println!("═══════════════════════════════════════════════════");
-    
-    println!("\n--- Core Chains ---");
-    println!(" [1] Bitcoin (BTC) {}      [2] Ethereum (ETH) {}", w, w);
-    println!(" [3] Solana (SOL) {}       [4] Hedera (HBAR) {}", w, w);
-    println!(" [5] Monero (XMR) {}       [6] ICP {}", w, w);
-    println!(" [7] ERC-20 Tokens {}      [8] Base L2 {}", w, w);
-    println!(" [9] Prasaga (SAGA) {}", w);
-    
-    println!("\n--- Extended Chains ---");
-    println!("[10] Polygon (POL) {}     [11] Avalanche (AVAX) {}", w, w);
-    println!("[12] Arbitrum (ARB) {}    [13] Cardano (ADA) {}", w, w);
-    println!("[14] Cosmos (ATOM) {}     [15] Polkadot (DOT) {}", w, w);
-    println!("[16] Near (NEAR) {}       [17] Tron (TRX) {}", w, w);
-    println!("[18] SUI {}               [19] Aptos (APT) {}", w, w);
-    println!("[20] TON {}", w);
-    
-    println!("\n--- Options ---");
-    println!(" [S] Cross-Chain Swap     [T] Tools & Faucets");
-    println!(" [W] View All Wallets     [M] Change Mode");
-    println!(" [X] Exit");
-}
-
-async fn handle_choice(choice: &str, mode: &WalletMode) -> Result<CliResponse, String> {
-    match choice.to_uppercase().as_str() {
-        "X" => Ok(CliResponse::Exit),
-        "M" => Ok(CliResponse::ChangeMode),
-        "S" => Ok(CliResponse::Swap),
-        "T" => { show_tools(mode); Ok(CliResponse::Continue) }
-        "W" => { show_all_wallets().await; Ok(CliResponse::Continue) }
-        "1" => { chain_menu("Bitcoin", "BTC", mode).await; Ok(CliResponse::Continue) }
-        "2" => { chain_menu("Ethereum", "ETH", mode).await; Ok(CliResponse::Continue) }
-        "3" => { chain_menu("Solana", "SOL", mode).await; Ok(CliResponse::Continue) }
-        "4" => { chain_menu("Hedera", "HBAR", mode).await; Ok(CliResponse::Continue) }
-        "5" => { chain_menu("Monero", "XMR", mode).await; Ok(CliResponse::Continue) }
-        "6" => { chain_menu("ICP", "ICP", mode).await; Ok(CliResponse::Continue) }
-        "7" => { println!("\n📝 ERC-20 tokens share Ethereum address"); wait(); Ok(CliResponse::Continue) }
-        "8" => { chain_menu("Base", "ETH", mode).await; Ok(CliResponse::Continue) }
-        "9" => { println!("\n⏳ Prasaga coming soon"); wait(); Ok(CliResponse::Continue) }
-        "10" => { chain_menu("Polygon", "POL", mode).await; Ok(CliResponse::Continue) }
-        "11" => { chain_menu("Avalanche", "AVAX", mode).await; Ok(CliResponse::Continue) }
-        "12" => { chain_menu("Arbitrum", "ETH", mode).await; Ok(CliResponse::Continue) }
-        "13" => { chain_menu("Cardano", "ADA", mode).await; Ok(CliResponse::Continue) }
-        "14" => { chain_menu("Cosmos", "ATOM", mode).await; Ok(CliResponse::Continue) }
-        "15" => { chain_menu("Polkadot", "DOT", mode).await; Ok(CliResponse::Continue) }
-        "16" => { chain_menu("Near", "NEAR", mode).await; Ok(CliResponse::Continue) }
-        "17" => { chain_menu("Tron", "TRX", mode).await; Ok(CliResponse::Continue) }
-        "18" => { chain_menu("SUI", "SUI", mode).await; Ok(CliResponse::Continue) }
-        "19" => { chain_menu("Aptos", "APT", mode).await; Ok(CliResponse::Continue) }
-        "20" => { chain_menu("TON", "TON", mode).await; Ok(CliResponse::Continue) }
-        _ => { println!("Invalid option"); Ok(CliResponse::Continue) }
-    }
-}
-
-async fn chain_menu(name: &str, symbol: &str, mode: &WalletMode) {
-    let manager = WALLET_MANAGER.read().await;
-    
-    let (addr, bal) = match name {
-        "Bitcoin" => manager.get_bitcoin_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Ethereum" => manager.get_ethereum_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Solana" => manager.get_solana_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Hedera" => manager.get_hedera_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Monero" => manager.get_monero_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "ICP" => manager.get_icp_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Base" | "Polygon" | "Avalanche" | "Arbitrum" => {
-            manager.get_evm_info(&name.to_lowercase()).await.unwrap_or(("N/A".into(), "0".into()))
-        }
-        "Cardano" => manager.get_cardano_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Cosmos" => manager.get_cosmos_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Polkadot" => manager.get_polkadot_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Near" => manager.get_near_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Tron" => manager.get_tron_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "SUI" => manager.get_sui_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "Aptos" => manager.get_aptos_info().await.unwrap_or(("N/A".into(), "0".into())),
-        "TON" => manager.get_ton_info().await.unwrap_or(("N/A".into(), "0".into())),
-        _ => ("N/A".into(), "0".into()),
-    };
-    drop(manager);
-    
+async fn tools_menu(manager: &WalletManager) -> Result<()> {
     loop {
-        println!("\n══════════════════════════════════════════");
-        println!("         {} WALLET", name.to_uppercase());
-        println!("══════════════════════════════════════════");
-        println!("Address: {}", addr);
-        println!("Balance: {} {}", bal, symbol);
+        println!("\n{}", "═".repeat(50));
+        println!("{}", "Tools & Utilities".cyan().bold());
+        println!("{}", "═".repeat(50));
         
-        println!("\n[1] View Address    [2] Check Balance");
-        println!("[3] Send {}        [4] Receive", symbol);
-        println!("[5] Tx History      [6] Faucet");
-        println!("[B] Back");
+        let options = vec![
+            "1. Address Book",
+            "2. Transaction History (All Chains)",
+            "3. Export Addresses",
+            "4. Verify Mnemonic",
+            "5. Network Status",
+            "6. Testnet Faucets",
+            "7. Back to Main Menu",
+        ];
         
-        print!("\nOption: ");
-        io::stdout().flush().ok();
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).ok();
+        let selection = Select::new()
+            .items(&options)
+            .default(0)
+            .interact()?;
         
-        match input.trim().to_lowercase().as_str() {
-            "b" => break,
-            "1" => println!("\n📍 {}", addr),
-            "2" => println!("\n💰 {} {}", bal, symbol),
-            "3" => {
-                if *mode == WalletMode::Demo {
-                    println!("\n📌 Demo mode - no real transactions");
-                } else {
-                    print!("\nTo address: ");
-                    io::stdout().flush().ok();
-                    let mut to = String::new();
-                    io::stdin().read_line(&mut to).ok();
-                    print!("Amount: ");
-                    io::stdout().flush().ok();
-                    let mut amt = String::new();
-                    io::stdin().read_line(&mut amt).ok();
-                    println!("\n⏳ Transaction broadcasting not yet implemented for {}", name);
+        match selection {
+            0 => println!("{}", "Address book not yet implemented.".yellow()),
+            1 => println!("{}", "Transaction history not yet implemented.".yellow()),
+            2 => {
+                // Export addresses
+                println!("\n{}", "Your Wallet Addresses:".cyan());
+                println!("{}", "─".repeat(60));
+                for chain in Chain::all() {
+                    if let Some(addr) = manager.get_address(*chain) {
+                        println!("{:<12} {}", chain.symbol(), addr);
+                    }
                 }
             }
-            "4" => println!("\n📥 Send {} to:\n   {}", symbol, addr),
-            "5" => println!("\n📜 View history in explorer"),
-            "6" => show_faucet(name),
-            _ => println!("Invalid option"),
+            3 => println!("{}", "Mnemonic verification not yet implemented.".yellow()),
+            4 => {
+                // Network status
+                println!("\n{}", "Network Status:".cyan());
+                println!("Mode: {} ", manager.mode.as_str().green());
+            }
+            5 => {
+                // Testnet faucets
+                if manager.mode.is_testnet() {
+                    println!("\n{}", "Testnet Faucets:".cyan());
+                    let faucets = vec![
+                        ("Bitcoin", "https://testnet-faucet.com/btc-testnet/"),
+                        ("Ethereum", "https://sepolia-faucet.pk910.de/"),
+                        ("Solana", "https://faucet.solana.com/"),
+                        ("Base", "https://www.coinbase.com/faucets"),
+                    ];
+                    for (name, url) in faucets {
+                        println!("{}: {}", name.yellow(), url);
+                    }
+                } else {
+                    println!("{}", "Faucets only available in Testnet mode.".yellow());
+                }
+            }
+            6 => break,
+            _ => {}
         }
-        wait();
     }
+    
+    Ok(())
 }
 
-async fn show_all_wallets() {
-    println!("\n══════════════════════════════════════════");
-    println!("           ALL WALLET ADDRESSES");
-    println!("══════════════════════════════════════════\n");
-    
-    let manager = WALLET_MANAGER.read().await;
-    
-    if let Ok((addr, bal)) = manager.get_bitcoin_info().await {
-        println!("BTC:  {} ({} BTC)", addr, bal);
-    }
-    if let Ok((addr, bal)) = manager.get_ethereum_info().await {
-        println!("ETH:  {} ({} ETH)", addr, bal);
-    }
-    if let Ok((addr, bal)) = manager.get_solana_info().await {
-        println!("SOL:  {} ({} SOL)", addr, bal);
-    }
-    if let Ok((addr, _)) = manager.get_hedera_info().await {
-        println!("HBAR: {}", addr);
-    }
-    if let Ok((addr, _)) = manager.get_cardano_info().await {
-        println!("ADA:  {}...", &addr[..30]);
-    }
-    if let Ok((addr, _)) = manager.get_cosmos_info().await {
-        println!("ATOM: {}", addr);
-    }
-    if let Ok((addr, _)) = manager.get_polkadot_info().await {
-        println!("DOT:  {}...", &addr[..30]);
-    }
-    if let Ok((addr, _)) = manager.get_near_info().await {
-        println!("NEAR: {}", addr);
-    }
-    if let Ok((addr, _)) = manager.get_tron_info().await {
-        println!("TRX:  {}", addr);
-    }
-    if let Ok((addr, _)) = manager.get_sui_info().await {
-        println!("SUI:  {}...", &addr[..30]);
-    }
-    if let Ok((addr, _)) = manager.get_aptos_info().await {
-        println!("APT:  {}...", &addr[..30]);
-    }
-    if let Ok((addr, _)) = manager.get_ton_info().await {
-        println!("TON:  {}", addr);
+fn settings_menu(manager: &WalletManager) -> Result<()> {
+    loop {
+        println!("\n{}", "═".repeat(50));
+        println!("{}", "Settings".cyan().bold());
+        println!("{}", "═".repeat(50));
+        
+        println!("Current Mode: {}", manager.mode.as_str().green());
+        
+        let options = vec![
+            "1. View Configuration",
+            "2. Edit RPC Endpoints",
+            "3. Export Configuration",
+            "4. Back to Main Menu",
+        ];
+        
+        let selection = Select::new()
+            .items(&options)
+            .default(0)
+            .interact()?;
+        
+        match selection {
+            0 => {
+                println!("\n{}", "Configuration:".cyan());
+                println!("Config path: {:?}", WalletConfig::config_path());
+                println!("Mode: {}", manager.mode.as_str());
+            }
+            1 => println!("{}", "RPC editing not yet implemented.".yellow()),
+            2 => println!("{}", "Export not yet implemented.".yellow()),
+            3 => break,
+            _ => {}
+        }
     }
     
-    wait();
-}
-
-fn show_tools(mode: &WalletMode) {
-    println!("\n══════════════════════════════════════════");
-    println!("           TOOLS & FAUCETS");
-    println!("══════════════════════════════════════════\n");
-    
-    if *mode == WalletMode::Testnet {
-        println!("🚰 Faucets:");
-        println!("   BTC:  https://coinfaucet.eu/en/btc-testnet/");
-        println!("   ETH:  https://sepoliafaucet.com/");
-        println!("   SOL:  https://faucet.solana.com/");
-        println!("   HBAR: https://portal.hedera.com/");
-        println!("   POL:  https://faucet.polygon.technology/");
-        println!("   AVAX: https://faucet.avax.network/");
-        println!("   BASE: https://www.coinbase.com/faucets/");
-    }
-    
-    println!("\n🔍 Explorers:");
-    println!("   BTC:  https://mempool.space/testnet");
-    println!("   ETH:  https://sepolia.etherscan.io/");
-    println!("   SOL:  https://explorer.solana.com/?cluster=devnet");
-    
-    wait();
-}
-
-fn show_faucet(chain: &str) {
-    let url = match chain {
-        "Bitcoin" => "https://coinfaucet.eu/en/btc-testnet/",
-        "Ethereum" => "https://sepoliafaucet.com/",
-        "Solana" => "https://faucet.solana.com/",
-        "Hedera" => "https://portal.hedera.com/",
-        "Polygon" => "https://faucet.polygon.technology/",
-        "Avalanche" => "https://faucet.avax.network/",
-        "Base" => "https://www.coinbase.com/faucets/base-ethereum-goerli-faucet",
-        "Arbitrum" => "https://faucet.arbitrum.io/",
-        "Cosmos" => "https://faucet.testnet.cosmos.network/",
-        "Near" => "https://wallet.testnet.near.org/",
-        "SUI" => "https://discord.com/invite/sui",
-        "Aptos" => "https://aptoslabs.com/testnet-faucet",
-        "TON" => "https://t.me/testgiver_ton_bot",
-        _ => "No faucet available",
-    };
-    println!("\n🚰 Faucet: {}", url);
-}
-
-async fn handle_swap(mode: &WalletMode) {
-    println!("\n══════════════════════════════════════════");
-    println!("           CROSS-CHAIN SWAP");
-    println!("══════════════════════════════════════════");
-    
-    if *mode == WalletMode::Demo {
-        println!("\n📌 Demo mode - no real swaps");
-    }
-    
-    println!("\nRoutes:");
-    println!("[1] ETH → BTC (THORChain)");
-    println!("[2] ETH → SOL (Wormhole)");
-    println!("[3] BTC → ETH (THORChain)");
-    println!("[B] Back");
-    
-    wait();
-}
-
-fn wait() {
-    println!("\nPress Enter...");
-    let mut s = String::new();
-    io::stdin().read_line(&mut s).ok();
+    Ok(())
 }

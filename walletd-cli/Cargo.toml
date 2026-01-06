@@ -1,10 +1,14 @@
 [package]
 name = "walletd-cli"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
-description = "WalletD Multi-Chain CLI - Full SDK Integration"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/walletd/walletd"
+description = "Multi-chain cryptocurrency wallet CLI - 17+ blockchain support"
+authors = ["Aslan Puff Paw <aslan@walletd.org>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/AslanPonies/walletd-v1.1"
+keywords = ["cryptocurrency", "wallet", "blockchain", "bitcoin", "ethereum"]
+categories = ["cryptography::cryptocurrencies", "command-line-utilities"]
 
 [[bin]]
 name = "walletd"
@@ -15,40 +19,47 @@ name = "walletd-icp-cli"
 path = "src/main.rs"
 
 [dependencies]
-# Async runtime
-tokio = { version = "1", features = ["full"] }
-async-trait = "0.1"
-
-# Serialization
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-dotenvy = "0.15"
-
-# Error handling
+# Core dependencies
+tokio = { version = "1.0", features = ["full", "rt-multi-thread", "macros"] }
 anyhow = "1.0"
 thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
-# Cryptography
-bitcoin = { version = "0.31", features = ["rand"] }
-ethers = "2.0"
-bs58 = "0.5"
+# Crypto primitives
 hex = "0.4"
-sha2 = "0.10"
-ed25519-dalek = { version = "2.0", features = ["rand_core"] }
 bip39 = "2.0"
-tiny-bip39 = "1.0"
-secp256k1 = { version = "0.28", features = ["rand", "recovery"] }
+k256 = { version = "0.13", features = ["ecdsa"] }
+ed25519-dalek = { version = "2.0", features = ["rand_core"] }
+sha2 = "0.10"
+sha3 = "0.10"
+ripemd = "0.1"
+blake2 = "0.10"
+bs58 = "0.5"
 
 # HTTP client
 reqwest = { version = "0.11", features = ["json"] }
 
-# Utilities
-chrono = { version = "0.4", features = ["serde"] }
-once_cell = "1.19"
-rand = "0.8"
-uuid = { version = "1.6", features = ["v4"] }
+# CLI UI
+colored = "2.0"
+dialoguer = "0.11"
+
+# Async utilities
+async-trait = "0.1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Configuration
 dirs = "5.0"
-base64 = "0.21"
+chrono = "0.4"
 
 [dev-dependencies]
-tempfile = "3.8"
+tokio-test = "0.4"
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
