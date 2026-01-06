@@ -367,7 +367,7 @@ pub fn derive_sui_address(mnemonic: &str, _mode: WalletMode) -> Result<String> {
     
     // SUI address = Blake2b256(flag || public_key)
     // Flag 0x00 for Ed25519
-    use blake2::{Blake2b256, Digest as Blake2Digest};
+    use blake2::{Blake2b, Digest as Blake2Digest}; use blake2::digest::consts::U32; type Blake2b256 = Blake2b<U32>;
     let mut hasher = Blake2b256::new();
     hasher.update(&[0x00]); // Ed25519 flag
     hasher.update(public_key.as_bytes());

@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Wallet operation mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WalletMode {
     Testnet,
     Mainnet,
@@ -39,7 +39,7 @@ impl Default for WalletMode {
 }
 
 /// Supported blockchain chains
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Chain {
     // Original chains (1-9)
     Bitcoin,
@@ -226,7 +226,7 @@ pub struct TransactionInfo {
     pub status: TransactionStatus,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TransactionStatus {
     Pending,
     Confirmed,

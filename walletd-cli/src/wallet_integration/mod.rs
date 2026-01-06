@@ -227,8 +227,8 @@ impl WalletManager {
     
     /// Generate new mnemonic
     pub fn generate_mnemonic() -> Result<String> {
-        use bip39::{Mnemonic, Language};
-        let mnemonic = Mnemonic::generate_in(Language::English, 12)
+        use bip39::Mnemonic; use rand::RngCore;
+        let mut entropy = [0u8; 16]; rand::thread_rng().fill_bytes(&mut entropy); let mnemonic = Mnemonic::from_entropy(&entropy)
             .map_err(|e| anyhow!("Failed to generate mnemonic: {:?}", e))?;
         Ok(mnemonic.to_string())
     }

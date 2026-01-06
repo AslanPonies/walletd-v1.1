@@ -19,6 +19,7 @@ name = "walletd-icp-cli"
 path = "src/main.rs"
 
 [dependencies]
+rand = "0.8"
 # Core dependencies
 tokio = { version = "1.0", features = ["full", "rt-multi-thread", "macros"] }
 anyhow = "1.0"
@@ -63,3 +64,4 @@ default = []
 
 [package.metadata.docs.rs]
 all-features = true
+[workspace]
