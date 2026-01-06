@@ -6,7 +6,7 @@ use crate::types::{Chain, WalletMode};
 use super::ethereum_real;
 
 /// Derive EVM-compatible address (Polygon, Avalanche, Arbitrum, etc.)
-pub fn derive_address(mnemonic: &str, chain: Chain, mode: WalletMode) -> Result<String> {
+pub fn derive_address(mnemonic: &str, _chain: Chain, mode: WalletMode) -> Result<String> {
     // All EVM chains use the same address format
     ethereum_real::derive_address(mnemonic, mode)
 }
@@ -21,7 +21,7 @@ pub async fn send_transaction(
     mnemonic: &str,
     to: &str,
     amount: &str,
-    chain: Chain,
+    _chain: Chain,
     rpc_url: &str,
     mode: WalletMode,
 ) -> Result<String> {
@@ -95,7 +95,6 @@ pub fn derive_cosmos_address(mnemonic: &str, _mode: WalletMode) -> Result<String
     
     // Create secp256k1 public key
     use k256::ecdsa::SigningKey;
-    use k256::elliptic_curve::sec1::ToEncodedPoint;
     
     let signing_key = SigningKey::from_bytes(key_bytes.into())
         .map_err(|e| anyhow!("Invalid key: {:?}", e))?;
@@ -282,7 +281,6 @@ pub fn derive_tron_address(mnemonic: &str, _mode: WalletMode) -> Result<String> 
     use bip39::Mnemonic;
     use sha3::{Keccak256, Digest};
     use k256::ecdsa::SigningKey;
-    use k256::elliptic_curve::sec1::ToEncodedPoint;
     
     let mnemonic = Mnemonic::parse(mnemonic)
         .map_err(|e| anyhow!("Invalid mnemonic: {:?}", e))?;
@@ -367,7 +365,7 @@ pub fn derive_sui_address(mnemonic: &str, _mode: WalletMode) -> Result<String> {
     
     // SUI address = Blake2b256(flag || public_key)
     // Flag 0x00 for Ed25519
-    use blake2::{Blake2b, Digest as Blake2Digest}; use blake2::digest::consts::U32; type Blake2b256 = Blake2b<U32>;
+    use blake2::Blake2b; use blake2::digest::consts::U32; type Blake2b256 = Blake2b<U32>;
     let mut hasher = Blake2b256::new();
     hasher.update(&[0x00]); // Ed25519 flag
     hasher.update(public_key.as_bytes());

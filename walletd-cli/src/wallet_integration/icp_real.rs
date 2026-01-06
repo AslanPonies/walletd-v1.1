@@ -6,7 +6,7 @@ use crate::types::WalletMode;
 /// Derive ICP principal/account from mnemonic
 pub fn derive_address(mnemonic: &str, _mode: WalletMode) -> Result<String> {
     use bip39::Mnemonic;
-    use sha2::{Sha256, Sha224, Digest};
+    use sha2::{Sha224, Digest};
     
     // Parse mnemonic
     let mnemonic = Mnemonic::parse(mnemonic)
@@ -20,7 +20,6 @@ pub fn derive_address(mnemonic: &str, _mode: WalletMode) -> Result<String> {
     
     // Create public key
     use k256::ecdsa::SigningKey;
-    use k256::elliptic_curve::sec1::ToEncodedPoint;
     
     let signing_key = SigningKey::from_bytes(key_bytes.into())
         .map_err(|e| anyhow!("Invalid private key: {:?}", e))?;
@@ -46,7 +45,7 @@ pub fn derive_address(mnemonic: &str, _mode: WalletMode) -> Result<String> {
 }
 
 /// Get ICP balance from ledger canister
-pub async fn get_balance(address: &str, rpc_url: &str) -> Result<String> {
+pub async fn get_balance(_address: &str, rpc_url: &str) -> Result<String> {
     // ICP balance queries require canister calls
     // This is a simplified HTTP query
     let client = reqwest::Client::new();

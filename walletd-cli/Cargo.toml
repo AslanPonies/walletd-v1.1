@@ -14,10 +14,6 @@ categories = ["cryptography::cryptocurrencies", "command-line-utilities"]
 name = "walletd"
 path = "src/main.rs"
 
-[[bin]]
-name = "walletd-icp-cli"
-path = "src/main.rs"
-
 [dependencies]
 rand = "0.8"
 # Core dependencies

@@ -172,7 +172,7 @@ async fn main_menu(manager: &WalletManager) -> Result<bool> {
     println!("{}", "Main Menu".cyan().bold());
     println!("{}", "═".repeat(50));
     
-    let mut options = vec![
+    let options = vec![
         " 1. Bitcoin (BTC)".to_string(),
         " 2. Ethereum (ETH)".to_string(),
         " 3. Solana (SOL)".to_string(),

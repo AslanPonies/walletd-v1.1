@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! Wallet integration module - Central wallet manager for all chains
 //!
 //! This module provides the WalletManager that coordinates wallet operations

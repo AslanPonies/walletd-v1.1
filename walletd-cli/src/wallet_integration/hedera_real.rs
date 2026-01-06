@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use crate::types::WalletMode;
 
 /// Derive Hedera address from mnemonic
-pub fn derive_address(mnemonic: &str, mode: WalletMode) -> Result<String> {
+pub fn derive_address(mnemonic: &str, _mode: WalletMode) -> Result<String> {
     use bip39::Mnemonic;
     use sha2::{Sha256, Digest};
     

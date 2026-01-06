@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! Configuration management for WalletD CLI
 //! Compatible with walletd_config.json format from original CLI
 

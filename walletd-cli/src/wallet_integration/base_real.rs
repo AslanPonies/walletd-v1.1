@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! Base L2 wallet operations
 //! Base is EVM-compatible, so we reuse Ethereum logic
 

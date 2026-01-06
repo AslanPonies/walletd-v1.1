@@ -41,7 +41,7 @@ pub fn derive_address(mnemonic: &str, mode: WalletMode) -> Result<String> {
 }
 
 /// Get Monero balance (requires wallet RPC)
-pub async fn get_balance(address: &str, _rpc_url: &str) -> Result<String> {
+pub async fn get_balance(_address: &str, _rpc_url: &str) -> Result<String> {
     // Monero requires a local wallet daemon for balance queries
     // The address alone isn't sufficient due to privacy features
     Ok("Balance requires wallet sync".to_string())

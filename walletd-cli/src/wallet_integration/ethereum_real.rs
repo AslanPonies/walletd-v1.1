@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! Ethereum wallet operations using WalletD Ethereum SDK
 
 use anyhow::{anyhow, Result};
@@ -21,7 +22,6 @@ pub fn derive_address(mnemonic: &str, _mode: WalletMode) -> Result<String> {
     
     // Create secp256k1 key and derive public key
     use k256::ecdsa::SigningKey;
-    use k256::elliptic_curve::sec1::ToEncodedPoint;
     
     let signing_key = SigningKey::from_bytes(key_bytes.into())
         .map_err(|e| anyhow!("Invalid private key: {:?}", e))?;
@@ -121,7 +121,7 @@ pub async fn send_transaction(
 ) -> Result<String> {
     use bip39::Mnemonic;
     use k256::ecdsa::SigningKey;
-    use sha3::{Keccak256, Digest};
+    
     
     // Parse amount in ETH
     let amount_eth: f64 = amount.parse()
@@ -258,7 +258,7 @@ fn encode_transaction(
 async fn sign_and_broadcast(
     tx_data: &[u8],
     _signing_key: &k256::ecdsa::SigningKey,
-    rpc_url: &str,
+    _rpc_url: &str,
 ) -> Result<String> {
     use sha3::{Keccak256, Digest};
     

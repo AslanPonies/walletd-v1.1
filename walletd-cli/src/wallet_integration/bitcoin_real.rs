@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! Bitcoin wallet operations using WalletD Bitcoin SDK
 
 use anyhow::{anyhow, Result};
@@ -40,7 +41,7 @@ pub fn derive_address(mnemonic: &str, mode: WalletMode) -> Result<String> {
     let prefix = if mode.is_testnet() { "tb" } else { "bc" };
     
     // Convert to 5-bit groups for bech32
-    let data: Vec<u8> = std::iter::once(0u8) // witness version 0
+    let _data: Vec<u8> = std::iter::once(0u8) // witness version 0
         .chain(pubkey_hash.iter().copied())
         .collect();
     
@@ -83,17 +84,17 @@ pub async fn get_balance(address: &str, rpc_url: &str) -> Result<String> {
 
 /// Send Bitcoin transaction
 pub async fn send_transaction(
-    mnemonic: &str,
+    _mnemonic: &str,
     to: &str,
     amount: &str,
-    rpc_url: &str,
+    _rpc_url: &str,
     mode: WalletMode,
 ) -> Result<String> {
     // Parse amount
     let amount_btc: f64 = amount.parse()
         .map_err(|_| anyhow!("Invalid amount"))?;
     
-    let amount_sats = (amount_btc * 100_000_000.0) as u64;
+    let _amount_sats = (amount_btc * 100_000_000.0) as u64;
     
     // Validate address format
     if mode.is_testnet() {
