@@ -23,10 +23,10 @@ pub trait Staking: Send + Sync {
     async fn get_validators(&self, limit: usize) -> StakingResult<Vec<ValidatorInfo>>;
     
     /// Create stake transaction
-    async fn stake(&self, amount: u64, validator: &str) -> StakingResult<Vec<u8>>;
+    async fn stake(&self, amount: u128, validator: &str) -> StakingResult<Vec<u8>>;
     
     /// Create unstake transaction
-    async fn unstake(&self, amount: u64, validator: &str) -> StakingResult<Vec<u8>>;
+    async fn unstake(&self, amount: u128, validator: &str) -> StakingResult<Vec<u8>>;
     
     /// Claim rewards
     async fn claim_rewards(&self) -> StakingResult<Vec<u8>>;
@@ -37,7 +37,7 @@ pub trait Staking: Send + Sync {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StakeInfo {
-    pub total_staked: u64,
+    pub total_staked: u128,
     pub available_balance: u64,
     pub pending_rewards: u64,
     pub delegations: Vec<Delegation>,
@@ -63,7 +63,7 @@ pub struct ValidatorInfo {
     pub address: String,
     pub name: String,
     pub commission: f64,
-    pub total_stake: u64,
+    pub total_stake: u128,
     pub delegators: u64,
     pub uptime: f64,
     pub apy: f64,

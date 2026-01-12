@@ -9,7 +9,7 @@ pub enum StakingError {
     #[error("Validator not found: {0}")]
     ValidatorNotFound(String),
     #[error("Minimum stake not met: {0}")]
-    MinimumStake(u64),
+    MinimumStake(u128),
     #[error("Unbonding period active")]
     UnbondingPeriod,
     #[error("Network error: {0}")]

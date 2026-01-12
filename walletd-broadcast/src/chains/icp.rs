@@ -84,8 +84,9 @@ impl TransactionBroadcaster for IcpBroadcaster {
 
         let url = format!("{}/construction/submit", self.rosetta_url);
         let response = self.client.post(&url).json(&request).send().await?;
+        let status = response.status();
         
-        if response.status().is_success() {
+        if status.is_success() {
             let data: serde_json::Value = response.json().await?;
             if let Some(hash) = data.get("transaction_identifier")
                 .and_then(|t| t.get("hash"))
@@ -94,6 +95,7 @@ impl TransactionBroadcaster for IcpBroadcaster {
                 return Ok(BroadcastResponse::new(hash.to_string(), "icp", "rosetta")
                     .with_confirmation_time(2));
             }
+            return Err(BroadcastError::Rejected("Missing transaction hash".to_string()));
         }
 
         let error = response.text().await.unwrap_or_default();

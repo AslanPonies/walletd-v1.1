@@ -31,6 +31,8 @@ tracing = "0.1"
 
 # Hex encoding
 hex = "0.4"
+md5 = "0.7"
+chrono = "0.4"
 
 # Base64
 base64 = "0.21"
@@ -42,8 +44,8 @@ bitcoin = { version = "0.31", features = ["serde"] }
 ethers = { version = "2.0", features = ["rustls"] }
 
 # Solana
-solana-sdk = "1.17"
-solana-client = "1.17"
+solana-sdk = "2.0"
+solana-client = "2.0"
 
 # Retry logic
 backoff = { version = "0.4", features = ["tokio"] }

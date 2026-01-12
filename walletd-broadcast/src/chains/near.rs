@@ -114,7 +114,7 @@ impl TransactionBroadcaster for NearBroadcaster {
 
     async fn estimate_fee(&self, _tx_size: usize) -> BroadcastResult<u64> {
         // NEAR: ~0.0001 NEAR per action
-        Ok(100_000_000_000_000_000_000) // 0.0001 NEAR in yoctoNEAR
+        Ok(100_000_000_000_000_u64) // 0.0001 NEAR in yoctoNEAR
     }
 
     async fn network_status(&self) -> BroadcastResult<NetworkStatus> {
@@ -132,7 +132,7 @@ impl TransactionBroadcaster for NearBroadcaster {
             block_height: height,
             avg_block_time: std::time::Duration::from_secs(1),
             mempool_size: None,
-            suggested_fee: 100_000_000_000_000_000_000,
+            suggested_fee: 100_000_000_000_000_u64,
         })
     }
 }

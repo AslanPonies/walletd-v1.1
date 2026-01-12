@@ -104,7 +104,7 @@ impl TransactionBroadcaster for CosmosBroadcaster {
                                 .and_then(|r| r.get("timestamp"))
                                 .and_then(|t| t.as_str())
                                 .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-                                .map(|dt| dt.timestamp() as u64),
+                                .map(|dt: chrono::DateTime<chrono::FixedOffset>| dt.timestamp() as u64),
                             fee: None,
                             gas_used: data.get("tx_response")
                                 .and_then(|r| r.get("gas_used"))

@@ -6,8 +6,8 @@ use bitcoin::{script::Builder, opcodes, PublicKey, ScriptBuf, Address, Network};
 /// Derive P2WSH multisig address
 pub fn derive_address(config: &MultisigConfig) -> MultisigResult<String> {
     let redeem_script = create_redeem_script(config)?;
-    let script_hash = bitcoin::WScriptHash::hash(redeem_script.as_bytes());
-    let address = Address::p2wsh(&ScriptBuf::new_p2wsh(&script_hash), Network::Bitcoin);
+    
+    let address = Address::p2wsh(&redeem_script, Network::Bitcoin);
     Ok(address.to_string())
 }
 

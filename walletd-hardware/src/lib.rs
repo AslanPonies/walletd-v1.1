@@ -12,8 +12,8 @@ pub use error::{HardwareError, HardwareResult};
 pub use types::*;
 
 /// Hardware wallet trait
-#[async_trait]
-pub trait HardwareWallet: Send + Sync {
+#[async_trait(?Send)]
+pub trait HardwareWallet: Send {
     /// Get device info
     async fn get_info(&self) -> HardwareResult<DeviceInfo>;
     

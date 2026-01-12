@@ -34,7 +34,7 @@ pub fn discover_devices() -> Vec<DeviceInfo> {
     devices
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl HardwareWallet for TrezorDevice {
     async fn get_info(&self) -> HardwareResult<DeviceInfo> {
         Ok(DeviceInfo {
