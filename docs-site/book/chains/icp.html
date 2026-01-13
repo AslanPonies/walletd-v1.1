@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Internet Computer (ICP) - WalletD Developer Documentation</title>
+        <title>ICP - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -177,28 +177,88 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="internet-computer-icp"><a class="header" href="#internet-computer-icp">Internet Computer (ICP)</a></h1>
-<p>DFINITY Internet Computer Protocol support.</p>
-<h2 id="features"><a class="header" href="#features">Features</a></h2>
-<ul>
-<li>HD wallet derivation</li>
-<li>ICP transfers</li>
-<li>Rosetta API integration</li>
-</ul>
+                        <h1 id="icp-internet-computer"><a class="header" href="#icp-internet-computer">ICP (Internet Computer)</a></h1>
+<blockquote>
+<p><strong>DFINITY’s Web3 platform</strong> — Web-speed smart contracts with canisters.</p>
+</blockquote>
 <h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use walletd::icp::{derive_address, get_balance};
+</span>use walletd::icp::{derive_address, get_balance, send_transaction};
 
-let address = derive_address(&amp;mnemonic, Network::Mainnet)?;
-let balance = get_balance(&amp;address).await?;
+let principal = derive_address(mnemonic, WalletMode::Mainnet)?;
+// → Principal ID
+
+let balance = get_balance(&amp;principal, "https://ic0.app").await?;
+// → Balance in e8s
+
+let tx = send_transaction(&amp;from, &amp;to, e8s_amount, &amp;rpc).await?;
 <span class="boring">}</span></code></pre>
+<h2 id="key-details"><a class="header" href="#key-details">Key Details</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Derivation Path</td><td><code>m/44'/223'/0'/0/0</code></td></tr>
+<tr><td>Native Unit</td><td>e8s</td></tr>
+<tr><td>Decimals</td><td>8 (1 ICP = 10^8 e8s)</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="unit-conversion"><a class="header" href="#unit-conversion">Unit Conversion</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn e8s_to_icp(e8s: u64) -&gt; f64 {
+    e8s as f64 / 100_000_000.0
+}
+
+fn icp_to_e8s(icp: f64) -&gt; u64 {
+    (icp * 100_000_000.0) as u64
+}
+<span class="boring">}</span></code></pre>
+<h2 id="account-types"><a class="header" href="#account-types">Account Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>Principal ID</td><td>Cryptographic identity</td></tr>
+<tr><td>Account ID</td><td>Ledger account (derived from Principal)</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Get Account ID from Principal
+let account_id = principal_to_account_id(&amp;principal, None)?;
+<span class="boring">}</span></code></pre>
+<h2 id="rpc-endpoints"><a class="header" href="#rpc-endpoints">RPC Endpoints</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Network</th><th>URL</th></tr>
+</thead>
+<tbody>
+<tr><td>Mainnet</td><td><code>https://ic0.app</code></td></tr>
+<tr><td>Mainnet</td><td><code>https://icp-api.io</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
+<ul>
+<li><a href="https://internetcomputer.org/docs">IC Docs</a></li>
+<li><a href="https://dashboard.internetcomputer.org">IC Dashboard</a></li>
+<li><a href="https://nns.ic0.app">NNS Dapp</a></li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../chains/solana.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../chains/ton.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -212,7 +272,7 @@ let balance = get_balance(&amp;address).await?;
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../chains/solana.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../chains/ton.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

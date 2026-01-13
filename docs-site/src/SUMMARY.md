@@ -2,24 +2,25 @@
 
 [Introduction](./README.md)
 
+---
+
 # Getting Started
 
-- [Quickstart](./guides/quickstart.md)
+- [60-Second Quickstart](./guides/quickstart.md)
 - [Installation](./guides/installation.md)
 - [CLI Usage](./guides/cli-usage.md)
 
-# Supported Chains
+---
 
-- [Bitcoin](./chains/bitcoin.md)
-- [Ethereum](./chains/ethereum.md)
+# Chain Guides
+
+- [Bitcoin (Deep Dive)](./chains/bitcoin.md)
+- [Ethereum (Deep Dive)](./chains/ethereum.md)
 - [Solana](./chains/solana.md)
-- [Internet Computer (ICP)](./chains/icp.md)
-- [Hedera](./chains/hedera.md)
-- [Monero](./chains/monero.md)
 - [Base](./chains/base.md)
 - [Polygon](./chains/polygon.md)
-- [Avalanche](./chains/avalanche.md)
 - [Arbitrum](./chains/arbitrum.md)
+- [Avalanche](./chains/avalanche.md)
 - [Cardano](./chains/cardano.md)
 - [Polkadot](./chains/polkadot.md)
 - [Cosmos](./chains/cosmos.md)
@@ -28,19 +29,23 @@
 - [Sui](./chains/sui.md)
 - [Aptos](./chains/aptos.md)
 - [TON](./chains/ton.md)
-- [Prasaga Avio](./chains/prasaga-avio.md)
+- [ICP](./chains/icp.md)
+- [Hedera](./chains/hedera.md)
+- [Monero](./chains/monero.md)
 
-# SDK Reference
+---
 
-- [Core Types](./sdk/types.md)
-- [Wallet Management](./sdk/wallet-management.md)
-- [Transaction Broadcasting](./sdk/broadcasting.md)
-- [Hardware Wallets](./sdk/hardware.md)
-- [Multi-Signature](./sdk/multisig.md)
-- [Staking](./sdk/staking.md)
+# Recipes (Tutorials)
 
-# Resources
+- [Payment Gateway](./recipes/payment-gateway.md)
+- [Portfolio Tracker](./recipes/portfolio-tracker.md)
 
-- [Security](./security.md)
+---
+
+# Reference
+
 - [API Reference](./api-reference.md)
+- [Troubleshooting](./troubleshooting.md)
+- [Why WalletD?](./comparison.md)
+- [Security](./security.md)
 - [Changelog](./changelog.md)

@@ -1,10 +1,6 @@
 # Installation
 
-## Requirements
-
-- **Rust**: 1.70 or later
-- **OpenSSL**: Required for some chain integrations
-- **pkg-config**: For dependency resolution
+## System Requirements
 
 ### macOS
 ```bash
@@ -14,46 +10,40 @@ export OPENSSL_DIR=$(brew --prefix openssl)
 
 ### Ubuntu/Debian
 ```bash
-sudo apt-get install libssl-dev pkg-config
+sudo apt-get install libssl-dev pkg-config build-essential
 ```
 
-## Library Installation
+### Windows
+Use WSL2 with Ubuntu.
 
-Add to your `Cargo.toml`:
+## Add to Your Project
+
 ```toml
 [dependencies]
 walletd = "1.4"
-
-# Optional: specific chain support
-walletd-bitcoin = "1.4"
-walletd-ethereum = "1.4"
-walletd-solana = "1.4"
+tokio = { version = "1", features = ["full"] }
 ```
 
 ## CLI Installation
+
 ```bash
-# Clone repository
 git clone https://github.com/AslanPonies/walletd-v1.1
 cd walletd-v1.1/walletd-cli
-
-# Build release binary
 cargo build --release
-
-# Optional: Install globally
-cp target/release/walletd /usr/local/bin/
+./target/release/walletd
 ```
 
-## Feature Flags
-```toml
-[dependencies]
-walletd = { version = "1.4", features = ["all-chains"] }
-```
+## Verify Installation
 
-Available features:
-- `bitcoin` - Bitcoin support
-- `ethereum` - Ethereum + EVM chains
-- `solana` - Solana support
-- `all-chains` - All 19 chains (default)
-- `hardware` - Ledger/Trezor support
-- `multisig` - Multi-signature wallets
-- `staking` - Staking functionality
+```rust
+fn main() {
+    let addr = walletd::bitcoin::derive_address(
+        "abandon abandon abandon abandon abandon abandon \
+         abandon abandon abandon abandon abandon about",
+        walletd::types::WalletMode::Testnet
+    ).unwrap();
+    
+    assert!(addr.starts_with("tb1q"));
+    println!("✅ WalletD installed successfully!");
+}
+```

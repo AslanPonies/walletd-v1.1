@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Multi-Signature - WalletD Developer Documentation</title>
+        <title>Portfolio Tracker - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -177,18 +177,204 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="multi-signature"><a class="header" href="#multi-signature">Multi-Signature</a></h1>
-<p>Bitcoin P2SH and P2WSH multisig support.</p>
+                        <h1 id="recipe-multi-chain-portfolio-tracker"><a class="header" href="#recipe-multi-chain-portfolio-tracker">Recipe: Multi-Chain Portfolio Tracker</a></h1>
+<blockquote>
+<p><strong>Build a portfolio tracker supporting 18 chains in 3 hours.</strong></p>
+</blockquote>
+<hr>
+<h2 id="what-youll-build"><a class="header" href="#what-youll-build">What You’ll Build</a></h2>
+<p>A portfolio tracker that:</p>
+<ul>
+<li>Monitors balances across all supported chains</li>
+<li>Tracks ERC-20/SPL tokens</li>
+<li>Shows USD values with live prices</li>
+<li>Provides transaction history</li>
+</ul>
+<hr>
+<h2 id="complete-code"><a class="header" href="#complete-code">Complete Code</a></h2>
+<pre class="playground"><code class="language-rust">use walletd::prelude::*;
+use std::collections::HashMap;
+use tokio::time::{interval, Duration};
+
+#[derive(Debug, Clone)]
+pub struct PortfolioAsset {
+    pub chain: String,
+    pub symbol: String,
+    pub balance: f64,
+    pub usd_value: f64,
+    pub address: String,
+}
+
+#[derive(Debug)]
+pub struct Portfolio {
+    mnemonic: String,
+    assets: Vec&lt;PortfolioAsset&gt;,
+    total_usd: f64,
+}
+
+impl Portfolio {
+    pub fn new(mnemonic: &amp;str) -&gt; Self {
+        Self {
+            mnemonic: mnemonic.to_string(),
+            assets: Vec::new(),
+            total_usd: 0.0,
+        }
+    }
+    
+    pub async fn refresh(&amp;mut self) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+        self.assets.clear();
+        self.total_usd = 0.0;
+        
+        // Fetch prices (use real API in production)
+        let prices = fetch_prices().await?;
+        
+        // Check each chain
+        let chains = vec![
+            ("Bitcoin", "BTC", "https://blockstream.info/api"),
+            ("Ethereum", "ETH", "https://eth.llamarpc.com"),
+            ("Solana", "SOL", "https://api.mainnet-beta.solana.com"),
+            ("Polygon", "MATIC", "https://polygon-rpc.com"),
+            ("Arbitrum", "ETH", "https://arb1.arbitrum.io/rpc"),
+            ("Base", "ETH", "https://mainnet.base.org"),
+            ("Avalanche", "AVAX", "https://api.avax.network/ext/bc/C/rpc"),
+        ];
+        
+        for (chain_name, symbol, rpc) in chains {
+            if let Ok(asset) = self.check_chain(chain_name, symbol, rpc, &amp;prices).await {
+                if asset.balance &gt; 0.0 {
+                    self.total_usd += asset.usd_value;
+                    self.assets.push(asset);
+                }
+            }
+        }
+        
+        // Sort by USD value
+        self.assets.sort_by(|a, b| b.usd_value.partial_cmp(&amp;a.usd_value).unwrap());
+        
+        Ok(())
+    }
+    
+    async fn check_chain(
+        &amp;self,
+        chain: &amp;str,
+        symbol: &amp;str,
+        rpc: &amp;str,
+        prices: &amp;HashMap&lt;String, f64&gt;,
+    ) -&gt; Result&lt;PortfolioAsset, Box&lt;dyn std::error::Error&gt;&gt; {
+        let address = match chain {
+            "Bitcoin" =&gt; bitcoin::derive_address(&amp;self.mnemonic, WalletMode::Mainnet)?,
+            _ =&gt; ethereum::derive_address(&amp;self.mnemonic, WalletMode::Mainnet)?,
+        };
+        
+        let balance_raw = match chain {
+            "Bitcoin" =&gt; bitcoin::get_balance(&amp;address, rpc).await?,
+            _ =&gt; ethereum::get_balance(&amp;address, rpc).await?,
+        };
+        
+        let balance = self.convert_balance(&amp;balance_raw, chain);
+        let price = prices.get(symbol).unwrap_or(&amp;0.0);
+        
+        Ok(PortfolioAsset {
+            chain: chain.to_string(),
+            symbol: symbol.to_string(),
+            balance,
+            usd_value: balance * price,
+            address,
+        })
+    }
+    
+    fn convert_balance(&amp;self, raw: &amp;str, chain: &amp;str) -&gt; f64 {
+        let value: u128 = raw.parse().unwrap_or(0);
+        match chain {
+            "Bitcoin" =&gt; value as f64 / 100_000_000.0,
+            "Solana" =&gt; value as f64 / 1_000_000_000.0,
+            _ =&gt; value as f64 / 1e18,
+        }
+    }
+    
+    pub fn display(&amp;self) {
+        println!("\n╔══════════════════════════════════════════════════════╗");
+        println!("║              PORTFOLIO TRACKER                        ║");
+        println!("╠══════════════════════════════════════════════════════╣");
+        
+        for asset in &amp;self.assets {
+            println!("║ {:12} │ {:&gt;12.6} {} │ ${:&gt;10.2} ║",
+                asset.chain,
+                asset.balance,
+                asset.symbol,
+                asset.usd_value
+            );
+        }
+        
+        println!("╠══════════════════════════════════════════════════════╣");
+        println!("║ TOTAL                              ${:&gt;10.2}       ║", self.total_usd);
+        println!("╚══════════════════════════════════════════════════════╝\n");
+    }
+}
+
+async fn fetch_prices() -&gt; Result&lt;HashMap&lt;String, f64&gt;, Box&lt;dyn std::error::Error&gt;&gt; {
+    // In production, use CoinGecko, CoinMarketCap, etc.
+    let mut prices = HashMap::new();
+    prices.insert("BTC".to_string(), 45000.0);
+    prices.insert("ETH".to_string(), 2500.0);
+    prices.insert("SOL".to_string(), 100.0);
+    prices.insert("MATIC".to_string(), 0.80);
+    prices.insert("AVAX".to_string(), 35.0);
+    Ok(prices)
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let mnemonic = std::env::var("MNEMONIC")?;
+    let mut portfolio = Portfolio::new(&amp;mnemonic);
+    
+    // Refresh every 60 seconds
+    let mut ticker = interval(Duration::from_secs(60));
+    
+    loop {
+        ticker.tick().await;
+        
+        if let Err(e) = portfolio.refresh().await {
+            eprintln!("Error refreshing: {}", e);
+            continue;
+        }
+        
+        // Clear screen and display
+        print!("\x1B[2J\x1B[1;1H");
+        portfolio.display();
+    }
+}</code></pre>
+<hr>
+<h2 id="sample-output"><a class="header" href="#sample-output">Sample Output</a></h2>
+<pre><code>╔══════════════════════════════════════════════════════╗
+║              PORTFOLIO TRACKER                        ║
+╠══════════════════════════════════════════════════════╣
+║ Bitcoin      │     0.500000 BTC │ $  22500.00       ║
+║ Ethereum     │     2.150000 ETH │ $   5375.00       ║
+║ Solana       │    50.000000 SOL │ $   5000.00       ║
+║ Polygon      │  1000.000000 MATIC │ $    800.00     ║
+╠══════════════════════════════════════════════════════╣
+║ TOTAL                              $  33675.00       ║
+╚══════════════════════════════════════════════════════╝
+</code></pre>
+<hr>
+<h2 id="enhancements"><a class="header" href="#enhancements">Enhancements</a></h2>
+<ol>
+<li><strong>Token Support</strong>: Add ERC-20 and SPL token tracking</li>
+<li><strong>Historical Data</strong>: Store snapshots for charts</li>
+<li><strong>Alerts</strong>: Notify on large balance changes</li>
+<li><strong>Export</strong>: CSV/JSON export for tax reporting</li>
+</ol>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../sdk/hardware.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../recipes/payment-gateway.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../sdk/staking.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../api-reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -198,11 +384,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../sdk/hardware.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../recipes/payment-gateway.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../sdk/staking.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../api-reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

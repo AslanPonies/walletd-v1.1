@@ -1,13 +1,18 @@
 [book]
-title = "WalletD Developer Documentation"
+title = "WalletD Documentation"
 authors = ["WalletD Team"]
 language = "en"
 src = "src"
 
 [build]
 build-dir = "book"
+create-missing = true
 
 [output.html]
 default-theme = "navy"
-preferred-dark-theme = "navy"
+preferred-dark-theme = "ayu"
 git-repository-url = "https://github.com/AslanPonies/walletd-v1.1"
+
+[output.html.search]
+enable = true
+limit-results = 30

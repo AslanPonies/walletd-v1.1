@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Quickstart - WalletD Developer Documentation</title>
+        <title>60-Second Quickstart - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -177,56 +177,47 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="quickstart"><a class="header" href="#quickstart">Quickstart</a></h1>
-<p>Get started with WalletD in 5 minutes.</p>
-<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
-<ul>
-<li>Rust 1.70+</li>
-<li>Cargo</li>
-</ul>
-<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
-<h3 id="as-a-library"><a class="header" href="#as-a-library">As a Library</a></h3>
+                        <h1 id="60-second-quickstart"><a class="header" href="#60-second-quickstart">60-Second Quickstart</a></h1>
+<h2 id="step-1-add-dependency"><a class="header" href="#step-1-add-dependency">Step 1: Add Dependency</a></h2>
 <pre><code class="language-toml">[dependencies]
 walletd = "1.4"
+tokio = { version = "1", features = ["full"] }
 </code></pre>
-<h3 id="cli-tool"><a class="header" href="#cli-tool">CLI Tool</a></h3>
-<pre><code class="language-bash">git clone https://github.com/AslanPonies/walletd-v1.1
-cd walletd-v1.1/walletd-cli
-cargo build --release
-./target/release/walletd
-</code></pre>
-<h2 id="create-your-first-wallet"><a class="header" href="#create-your-first-wallet">Create Your First Wallet</a></h2>
-<pre class="playground"><code class="language-rust">use walletd::prelude::*;
+<h2 id="step-2-run-this-code"><a class="header" href="#step-2-run-this-code">Step 2: Run This Code</a></h2>
+<pre class="playground"><code class="language-rust">use walletd::{bitcoin, ethereum};
+use walletd::types::WalletMode;
 
-fn main() -&gt; Result&lt;()&gt; {
-    // Generate 24-word mnemonic
-    let mnemonic = Mnemonic::generate(24)?;
-    println!("Mnemonic: {}", mnemonic.phrase());
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let mnemonic = "abandon abandon abandon abandon abandon abandon \
+                    abandon abandon abandon abandon abandon about";
     
-    // Derive addresses for multiple chains
-    let btc = walletd::bitcoin::derive_address(&amp;mnemonic, Network::Mainnet)?;
-    let eth = walletd::ethereum::derive_address(&amp;mnemonic, Network::Mainnet)?;
-    let sol = walletd::solana::derive_address(&amp;mnemonic, Network::Mainnet)?;
+    let btc = bitcoin::derive_address(mnemonic, WalletMode::Mainnet)?;
+    let eth = ethereum::derive_address(mnemonic, WalletMode::Mainnet)?;
     
     println!("Bitcoin:  {}", btc);
     println!("Ethereum: {}", eth);
-    println!("Solana:   {}", sol);
+    
+    let balance = bitcoin::get_balance(
+        "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+        "https://blockstream.info/api"
+    ).await?;
+    
+    println!("Balance: {} satoshis", balance);
     
     Ok(())
 }</code></pre>
-<h2 id="using-the-cli"><a class="header" href="#using-the-cli">Using the CLI</a></h2>
-<pre><code class="language-bash"># Launch interactive mode
-./walletd
-
-# Select network (Testnet recommended for testing)
-# Choose a chain
-# Generate or import wallet
+<h2 id="expected-output"><a class="header" href="#expected-output">Expected Output</a></h2>
+<pre><code>Bitcoin:  bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu
+Ethereum: 0x9858EfFD232B4033E47d90003D41EC34EcaEda94
+Balance: 1234567 satoshis
 </code></pre>
+<p>🎉 <strong>You just queried Bitcoin in 3 lines of code!</strong></p>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
 <ul>
-<li><a href="./installation.html">Installation Guide</a> - Detailed setup instructions</li>
-<li><a href="./cli-usage.html">CLI Usage</a> - Full CLI documentation</li>
-<li><a href="../chains/bitcoin.html">Bitcoin Guide</a> - Bitcoin-specific features</li>
+<li><a href="../chains/bitcoin.html">Bitcoin Deep Dive</a></li>
+<li><a href="../chains/ethereum.html">Ethereum Guide</a></li>
+<li><a href="../recipes/payment-gateway.html">Build a Payment Gateway</a></li>
 </ul>
 
                     </main>

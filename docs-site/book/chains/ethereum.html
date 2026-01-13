@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Ethereum - WalletD Developer Documentation</title>
+        <title>Ethereum (Deep Dive) - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -177,27 +177,664 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="ethereum"><a class="header" href="#ethereum">Ethereum</a></h1>
-<p>Full Ethereum support with EIP-1559 transactions and ERC-20 tokens.</p>
-<h2 id="features"><a class="header" href="#features">Features</a></h2>
-<ul>
-<li>EIP-1559 transactions</li>
-<li>ERC-20 token support</li>
-<li>Smart contract calls</li>
-<li>Gas estimation</li>
-</ul>
+                        <h1 id="ethereum-deep-dive"><a class="header" href="#ethereum-deep-dive">Ethereum Deep Dive</a></h1>
+<blockquote>
+<p><strong>Complete Ethereum guide</strong> — From basic transfers to ERC-20 tokens and gas optimization.</p>
+</blockquote>
+<hr>
+<h2 id="table-of-contents"><a class="header" href="#table-of-contents">Table of Contents</a></h2>
+<ol>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#complete-api-reference">Complete API Reference</a></li>
+<li><a href="#gas--fees-explained">Gas &amp; Fees Explained</a></li>
+<li><a href="#erc-20-tokens">ERC-20 Tokens</a></li>
+<li><a href="#transaction-types">Transaction Types</a></li>
+<li><a href="#nonce-management">Nonce Management</a></li>
+<li><a href="#smart-contract-interaction">Smart Contract Interaction</a></li>
+<li><a href="#l2-networks">L2 Networks</a></li>
+<li><a href="#ens-resolution">ENS Resolution</a></li>
+<li><a href="#production-patterns">Production Patterns</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ol>
+<hr>
 <h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
+<pre class="playground"><code class="language-rust">use walletd::ethereum::{derive_address, get_balance, send_transaction};
+use walletd::types::WalletMode;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let mnemonic = "your 24 word mnemonic here";
+    
+    // 1. Derive address
+    let address = derive_address(mnemonic, WalletMode::Mainnet)?;
+    println!("Address: {}", address);  // 0x...
+    
+    // 2. Check balance
+    let balance_wei = get_balance(&amp;address, "https://eth.llamarpc.com").await?;
+    let eth = wei_to_eth(&amp;balance_wei);
+    println!("Balance: {:.6} ETH", eth);
+    
+    // 3. Send ETH
+    let tx_hash = send_transaction(
+        &amp;from_address,
+        &amp;to_address,
+        "1000000000000000000",  // 1 ETH in wei
+        &amp;private_key,
+        "https://eth.llamarpc.com"
+    ).await?;
+    
+    println!("TX: https://etherscan.io/tx/{}", tx_hash);
+    
+    Ok(())
+}
+
+fn wei_to_eth(wei: &amp;str) -&gt; f64 {
+    wei.parse::&lt;u128&gt;().unwrap_or(0) as f64 / 1e18
+}</code></pre>
+<hr>
+<h2 id="complete-api-reference"><a class="header" href="#complete-api-reference">Complete API Reference</a></h2>
+<h3 id="derive_address"><a class="header" href="#derive_address">derive_address</a></h3>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use walletd::ethereum::{derive_address, get_balance};
-
-let address = derive_address(&amp;mnemonic, Network::Mainnet)?;
-let balance = get_balance(&amp;address).await?;
+</span>pub fn derive_address(mnemonic: &amp;str, mode: WalletMode) -&gt; Result&lt;String&gt;
 <span class="boring">}</span></code></pre>
-<h2 id="networks"><a class="header" href="#networks">Networks</a></h2>
+<p><strong>Derivation Path:</strong> <code>m/44'/60'/0'/0/0</code></p>
+<p><strong>Returns:</strong> Checksummed address (EIP-55)</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let address = derive_address(mnemonic, WalletMode::Mainnet)?;
+// → "0x742d35Cc6634C0532925a3b844Bc9e7595f8c2a1"
+//    ^^-- Note mixed case (checksum)
+
+// Same address works on all EVM chains!
+// Mainnet, Goerli, Sepolia, Polygon, Arbitrum, Base, etc.
+<span class="boring">}</span></code></pre>
+<hr>
+<h3 id="get_balance"><a class="header" href="#get_balance">get_balance</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn get_balance(address: &amp;str, rpc_url: &amp;str) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Returns:</strong> Balance in <strong>wei</strong> as a string (1 ETH = 10^18 wei)</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let wei = get_balance(&amp;address, "https://eth.llamarpc.com").await?;
+
+// Convert to ETH
+let wei_u128: u128 = wei.parse()?;
+let eth = wei_u128 as f64 / 1_000_000_000_000_000_000.0;
+println!("{:.6} ETH", eth);
+<span class="boring">}</span></code></pre>
+<p><strong>Free RPC Endpoints:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Network</th><th>URL</th><th>Chain ID</th></tr>
+</thead>
+<tbody>
+<tr><td>Mainnet</td><td><code>https://eth.llamarpc.com</code></td><td>1</td></tr>
+<tr><td>Mainnet</td><td><code>https://rpc.ankr.com/eth</code></td><td>1</td></tr>
+<tr><td>Mainnet</td><td><code>https://cloudflare-eth.com</code></td><td>1</td></tr>
+<tr><td>Sepolia</td><td><code>https://rpc.sepolia.org</code></td><td>11155111</td></tr>
+<tr><td>Sepolia</td><td><code>https://ethereum-sepolia.blockpi.network/v1/rpc/public</code></td><td>11155111</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h3 id="send_transaction"><a class="header" href="#send_transaction">send_transaction</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn send_transaction(
+    from: &amp;str,
+    to: &amp;str,
+    amount_wei: &amp;str,
+    private_key: &amp;str,
+    rpc_url: &amp;str,
+) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Features:</strong></p>
 <ul>
-<li>Mainnet: Chain ID 1</li>
-<li>Sepolia: Chain ID 11155111</li>
+<li>✅ EIP-1559 transactions (Type 2)</li>
+<li>✅ Automatic gas estimation</li>
+<li>✅ Automatic nonce management</li>
+<li>✅ Chain ID auto-detection</li>
+</ul>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Send 0.1 ETH
+let tx_hash = send_transaction(
+    "0xYourAddress...",
+    "0xRecipient...",
+    "100000000000000000",  // 0.1 ETH
+    "0xYourPrivateKey...",
+    "https://eth.llamarpc.com"
+).await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="gas--fees-explained"><a class="header" href="#gas--fees-explained">Gas &amp; Fees Explained</a></h2>
+<h3 id="the-gas-model"><a class="header" href="#the-gas-model">The Gas Model</a></h3>
+<pre><code>Transaction Cost = Gas Used × Gas Price
+
+Where:
+- Gas Used: Computational units consumed (e.g., 21,000 for ETH transfer)
+- Gas Price: Price per unit in gwei (fluctuates with demand)
+</code></pre>
+<h3 id="eip-1559-fees-post-london"><a class="header" href="#eip-1559-fees-post-london">EIP-1559 Fees (Post-London)</a></h3>
+<pre><code>Total Fee = Gas Used × (Base Fee + Priority Fee)
+
+- Base Fee: Set by protocol, burned (destroyed)
+- Priority Fee: Tip to validator, you set this
+- Max Fee: Your maximum willingness to pay
+</code></pre>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::ethereum::{get_gas_price, send_transaction_eip1559};
+
+// Get current gas prices
+let gas = get_gas_price("https://eth.llamarpc.com").await?;
+println!("Base Fee: {} gwei", gas.base_fee / 1e9);
+println!("Priority Fee: {} gwei", gas.priority_fee / 1e9);
+
+// Send with custom gas settings
+let tx_hash = send_transaction_eip1559(
+    &amp;from,
+    &amp;to,
+    amount,
+    &amp;key,
+    21_000,                    // gas_limit
+    gas.base_fee * 2,         // max_fee (2x buffer for base fee increase)
+    2_000_000_000,            // priority_fee (2 gwei tip)
+    &amp;rpc
+).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="gas-limits-by-operation"><a class="header" href="#gas-limits-by-operation">Gas Limits by Operation</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Operation</th><th>Typical Gas</th><th>At 30 gwei</th></tr>
+</thead>
+<tbody>
+<tr><td>ETH transfer</td><td>21,000</td><td>~$1.50</td></tr>
+<tr><td>ERC-20 transfer</td><td>65,000</td><td>~$4.50</td></tr>
+<tr><td>ERC-20 approve</td><td>45,000</td><td>~$3.15</td></tr>
+<tr><td>Uniswap swap</td><td>150,000-300,000</td><td>~$15-30</td></tr>
+<tr><td>NFT mint</td><td>100,000-200,000</td><td>~$10-20</td></tr>
+<tr><td>Contract deploy</td><td>500,000+</td><td>~$50+</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="real-time-gas-tracking"><a class="header" href="#real-time-gas-tracking">Real-Time Gas Tracking</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Monitor gas prices
+loop {
+    let gas = get_gas_price(&amp;rpc).await?;
+    let eth_transfer_cost = 21_000.0 * (gas.base_fee + gas.priority_fee) / 1e18;
+    
+    println!("ETH transfer cost: ${:.2}", eth_transfer_cost * eth_price);
+    
+    if eth_transfer_cost &lt; 1.0 {
+        println!("Low gas! Good time to transact.");
+        break;
+    }
+    
+    tokio::time::sleep(Duration::from_secs(60)).await;
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="erc-20-tokens"><a class="header" href="#erc-20-tokens">ERC-20 Tokens</a></h2>
+<h3 id="check-token-balance"><a class="header" href="#check-token-balance">Check Token Balance</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::ethereum::erc20;
+
+// USDC on mainnet
+let usdc_contract = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+let balance = erc20::get_balance(usdc_contract, &amp;wallet_address, &amp;rpc).await?;
+
+// USDC has 6 decimals
+let usdc_amount = balance.parse::&lt;u64&gt;()? as f64 / 1_000_000.0;
+println!("{:.2} USDC", usdc_amount);
+<span class="boring">}</span></code></pre>
+<h3 id="common-token-contracts-mainnet"><a class="header" href="#common-token-contracts-mainnet">Common Token Contracts (Mainnet)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Token</th><th>Address</th><th>Decimals</th></tr>
+</thead>
+<tbody>
+<tr><td>USDC</td><td><code>0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48</code></td><td>6</td></tr>
+<tr><td>USDT</td><td><code>0xdAC17F958D2ee523a2206206994597C13D831ec7</code></td><td>6</td></tr>
+<tr><td>DAI</td><td><code>0x6B175474E89094C44Da98b954EesacDeE97AE4</code></td><td>18</td></tr>
+<tr><td>WETH</td><td><code>0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2</code></td><td>18</td></tr>
+<tr><td>WBTC</td><td><code>0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599</code></td><td>8</td></tr>
+<tr><td>LINK</td><td><code>0x514910771AF9Ca656af840dff83E8264EcF986CA</code></td><td>18</td></tr>
+<tr><td>UNI</td><td><code>0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984</code></td><td>18</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="transfer-tokens"><a class="header" href="#transfer-tokens">Transfer Tokens</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Approve + Transfer pattern
+// Step 1: Approve spender (if needed)
+let approve_hash = erc20::approve(
+    usdc_contract,
+    spender_address,
+    amount,
+    &amp;private_key,
+    &amp;rpc
+).await?;
+
+// Step 2: Transfer
+let transfer_hash = erc20::transfer(
+    usdc_contract,
+    recipient,
+    amount,
+    &amp;private_key,
+    &amp;rpc
+).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="get-token-info"><a class="header" href="#get-token-info">Get Token Info</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let info = erc20::get_token_info(contract, &amp;rpc).await?;
+println!("Name: {}", info.name);        // "USD Coin"
+println!("Symbol: {}", info.symbol);    // "USDC"
+println!("Decimals: {}", info.decimals); // 6
+println!("Total Supply: {}", info.total_supply);
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="transaction-types"><a class="header" href="#transaction-types">Transaction Types</a></h2>
+<h3 id="type-0-legacy"><a class="header" href="#type-0-legacy">Type 0 (Legacy)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Pre-EIP-1559, still supported
+let tx = LegacyTransaction {
+    nonce: 0,
+    gas_price: 30_000_000_000,  // 30 gwei
+    gas_limit: 21_000,
+    to: recipient,
+    value: amount,
+    data: vec![],
+};
+<span class="boring">}</span></code></pre>
+<h3 id="type-2-eip-1559---recommended"><a class="header" href="#type-2-eip-1559---recommended">Type 2 (EIP-1559) - Recommended</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Modern transaction type
+let tx = Eip1559Transaction {
+    chain_id: 1,
+    nonce: 0,
+    max_priority_fee_per_gas: 2_000_000_000,  // 2 gwei tip
+    max_fee_per_gas: 100_000_000_000,         // 100 gwei max
+    gas_limit: 21_000,
+    to: recipient,
+    value: amount,
+    data: vec![],
+    access_list: vec![],
+};
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="nonce-management"><a class="header" href="#nonce-management">Nonce Management</a></h2>
+<h3 id="whats-a-nonce"><a class="header" href="#whats-a-nonce">What’s a Nonce?</a></h3>
+<p>Every transaction has a sequential nonce starting at 0. Transactions must be mined in order.</p>
+<pre><code>Address: 0xABC...
+├── Nonce 0: ✅ Confirmed
+├── Nonce 1: ✅ Confirmed
+├── Nonce 2: ⏳ Pending
+├── Nonce 3: 🔒 Queued (waiting for 2)
+└── Nonce 4: 🔒 Queued (waiting for 2, 3)
+</code></pre>
+<h3 id="get-current-nonce"><a class="header" href="#get-current-nonce">Get Current Nonce</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::ethereum::get_nonce;
+
+// Next nonce to use
+let nonce = get_nonce(&amp;address, &amp;rpc).await?;
+println!("Next nonce: {}", nonce);
+
+// Pending nonce (includes mempool)
+let pending_nonce = get_pending_nonce(&amp;address, &amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="handle-nonce-gaps"><a class="header" href="#handle-nonce-gaps">Handle Nonce Gaps</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Problem: Transaction stuck, blocking all future txs
+// Solution: Replace with same nonce
+
+let stuck_nonce = 5;
+let tx_hash = send_transaction_with_nonce(
+    &amp;from,
+    &amp;to,
+    "0",  // Can send 0 ETH to self
+    stuck_nonce,
+    high_gas_price,  // Higher than stuck tx
+    &amp;key,
+    &amp;rpc
+).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="parallel-transaction-sending"><a class="header" href="#parallel-transaction-sending">Parallel Transaction Sending</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Send multiple transactions without waiting
+let base_nonce = get_nonce(&amp;address, &amp;rpc).await?;
+
+let futures: Vec&lt;_&gt; = (0..5).map(|i| {
+    let nonce = base_nonce + i;
+    send_transaction_with_nonce(&amp;from, &amp;to, amount, nonce, &amp;key, &amp;rpc)
+}).collect();
+
+let results = futures::future::join_all(futures).await;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="smart-contract-interaction"><a class="header" href="#smart-contract-interaction">Smart Contract Interaction</a></h2>
+<h3 id="read-contract-free"><a class="header" href="#read-contract-free">Read Contract (Free)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::ethereum::contract;
+
+// Call view/pure function
+let result = contract::call(
+    contract_address,
+    "balanceOf(address)",
+    &amp;[wallet_address],
+    &amp;rpc
+).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="write-contract-costs-gas"><a class="header" href="#write-contract-costs-gas">Write Contract (Costs Gas)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Call state-changing function
+let tx_hash = contract::send(
+    contract_address,
+    "transfer(address,uint256)",
+    &amp;[recipient, amount],
+    &amp;private_key,
+    &amp;rpc
+).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="abi-encoding"><a class="header" href="#abi-encoding">ABI Encoding</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::ethereum::abi;
+
+// Encode function call
+let data = abi::encode_function_call(
+    "transfer(address,uint256)",
+    &amp;[
+        abi::Address(recipient),
+        abi::Uint256(amount),
+    ]
+)?;
+
+// Decode return value
+let balance: U256 = abi::decode_output("uint256", &amp;result)?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="l2-networks"><a class="header" href="#l2-networks">L2 Networks</a></h2>
+<p>All EVM L2s use the same API - just change the RPC URL.</p>
+<h3 id="network-configuration"><a class="header" href="#network-configuration">Network Configuration</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Network</th><th>RPC</th><th>Chain ID</th><th>Native Token</th></tr>
+</thead>
+<tbody>
+<tr><td>Base</td><td><code>https://mainnet.base.org</code></td><td>8453</td><td>ETH</td></tr>
+<tr><td>Arbitrum</td><td><code>https://arb1.arbitrum.io/rpc</code></td><td>42161</td><td>ETH</td></tr>
+<tr><td>Optimism</td><td><code>https://mainnet.optimism.io</code></td><td>10</td><td>ETH</td></tr>
+<tr><td>Polygon</td><td><code>https://polygon-rpc.com</code></td><td>137</td><td>MATIC</td></tr>
+<tr><td>Avalanche</td><td><code>https://api.avax.network/ext/bc/C/rpc</code></td><td>43114</td><td>AVAX</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="multi-chain-balance-check"><a class="header" href="#multi-chain-balance-check">Multi-Chain Balance Check</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let networks = vec![
+    ("Ethereum", "https://eth.llamarpc.com", 18, "ETH"),
+    ("Base", "https://mainnet.base.org", 18, "ETH"),
+    ("Polygon", "https://polygon-rpc.com", 18, "MATIC"),
+    ("Arbitrum", "https://arb1.arbitrum.io/rpc", 18, "ETH"),
+];
+
+for (name, rpc, decimals, symbol) in networks {
+    let balance = get_balance(&amp;address, rpc).await?;
+    let amount = balance.parse::&lt;u128&gt;()? as f64 / 10f64.powi(decimals);
+    println!("{}: {:.6} {}", name, amount, symbol);
+}
+<span class="boring">}</span></code></pre>
+<h3 id="bridging-considerations"><a class="header" href="#bridging-considerations">Bridging Considerations</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Same address on all EVM chains
+let address = derive_address(mnemonic, WalletMode::Mainnet)?;
+
+// This address works on:
+// - Ethereum mainnet
+// - Base
+// - Polygon  
+// - Arbitrum
+// - Optimism
+// - Avalanche C-Chain
+// - Any EVM chain!
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="ens-resolution"><a class="header" href="#ens-resolution">ENS Resolution</a></h2>
+<h3 id="resolve-ens-name"><a class="header" href="#resolve-ens-name">Resolve ENS Name</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::ethereum::ens;
+
+// vitalik.eth → 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+let address = ens::resolve("vitalik.eth", &amp;rpc).await?;
+println!("Address: {}", address);
+<span class="boring">}</span></code></pre>
+<h3 id="reverse-lookup"><a class="header" href="#reverse-lookup">Reverse Lookup</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 0xd8dA6BF2... → vitalik.eth
+let name = ens::reverse_lookup(&amp;address, &amp;rpc).await?;
+if let Some(ens_name) = name {
+    println!("ENS: {}", ens_name);
+}
+<span class="boring">}</span></code></pre>
+<h3 id="safe-send-with-ens"><a class="header" href="#safe-send-with-ens">Safe Send with ENS</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn send_to(recipient: &amp;str, amount: &amp;str, key: &amp;str, rpc: &amp;str) -&gt; Result&lt;String&gt; {
+    // Resolve ENS if needed
+    let to_address = if recipient.ends_with(".eth") {
+        ens::resolve(recipient, rpc).await?
+    } else {
+        recipient.to_string()
+    };
+    
+    send_transaction(&amp;from, &amp;to_address, amount, key, rpc).await
+}
+
+// Usage
+send_to("vitalik.eth", "1000000000000000000", &amp;key, &amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="production-patterns"><a class="header" href="#production-patterns">Production Patterns</a></h2>
+<h3 id="unit-conversion-helpers"><a class="header" href="#unit-conversion-helpers">Unit Conversion Helpers</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>const WEI_PER_ETH: u128 = 1_000_000_000_000_000_000;
+const WEI_PER_GWEI: u128 = 1_000_000_000;
+
+fn eth_to_wei(eth: f64) -&gt; u128 {
+    (eth * WEI_PER_ETH as f64) as u128
+}
+
+fn wei_to_eth(wei: u128) -&gt; f64 {
+    wei as f64 / WEI_PER_ETH as f64
+}
+
+fn gwei_to_wei(gwei: f64) -&gt; u128 {
+    (gwei * WEI_PER_GWEI as f64) as u128
+}
+
+fn wei_to_gwei(wei: u128) -&gt; f64 {
+    wei as f64 / WEI_PER_GWEI as f64
+}
+
+// Format for display
+fn format_eth(wei: u128) -&gt; String {
+    format!("{:.6} ETH", wei_to_eth(wei))
+}
+<span class="boring">}</span></code></pre>
+<h3 id="address-validation"><a class="header" href="#address-validation">Address Validation</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn is_valid_eth_address(address: &amp;str) -&gt; bool {
+    // Check format
+    if !address.starts_with("0x") {
+        return false;
+    }
+    if address.len() != 42 {
+        return false;
+    }
+    
+    // Check hex characters
+    address[2..].chars().all(|c| c.is_ascii_hexdigit())
+}
+
+// Checksum validation (EIP-55)
+fn is_checksummed(address: &amp;str) -&gt; bool {
+    use sha3::{Digest, Keccak256};
+    
+    let addr_lower = &amp;address[2..].to_lowercase();
+    let hash = hex::encode(Keccak256::digest(addr_lower.as_bytes()));
+    
+    for (i, c) in address[2..].chars().enumerate() {
+        if c.is_alphabetic() {
+            let should_upper = hash.chars().nth(i).unwrap() &gt;= '8';
+            if should_upper != c.is_uppercase() {
+                return false;
+            }
+        }
+    }
+    true
+}
+<span class="boring">}</span></code></pre>
+<h3 id="retry-logic"><a class="header" href="#retry-logic">Retry Logic</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn send_with_retry(
+    from: &amp;str,
+    to: &amp;str,
+    amount: &amp;str,
+    key: &amp;str,
+    rpc: &amp;str,
+    max_retries: u32,
+) -&gt; Result&lt;String&gt; {
+    let mut last_error = None;
+    
+    for attempt in 0..max_retries {
+        match send_transaction(from, to, amount, key, rpc).await {
+            Ok(hash) =&gt; return Ok(hash),
+            Err(e) =&gt; {
+                eprintln!("Attempt {} failed: {}", attempt + 1, e);
+                last_error = Some(e);
+                
+                // Exponential backoff
+                let delay = 2u64.pow(attempt);
+                tokio::time::sleep(Duration::from_secs(delay)).await;
+            }
+        }
+    }
+    
+    Err(last_error.unwrap())
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h2>
+<h3 id="insufficient-funds-for-gas"><a class="header" href="#insufficient-funds-for-gas">“Insufficient funds for gas”</a></h3>
+<p><strong>Cause</strong>: Not enough ETH to cover gas fees.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Check if you can afford the transaction
+let balance: u128 = get_balance(&amp;address, &amp;rpc).await?.parse()?;
+let gas = get_gas_price(&amp;rpc).await?;
+let gas_cost = 21_000 * (gas.base_fee + gas.priority_fee);
+let total_needed = amount + gas_cost;
+
+if balance &lt; total_needed {
+    println!("Need {} wei more", total_needed - balance);
+}
+<span class="boring">}</span></code></pre>
+<h3 id="nonce-too-low"><a class="header" href="#nonce-too-low">“Nonce too low”</a></h3>
+<p><strong>Cause</strong>: Transaction with this nonce already confirmed.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Get correct nonce
+let nonce = get_pending_nonce(&amp;address, &amp;rpc).await?;
+// Use this nonce for your transaction
+<span class="boring">}</span></code></pre>
+<h3 id="replacement-transaction-underpriced"><a class="header" href="#replacement-transaction-underpriced">“Replacement transaction underpriced”</a></h3>
+<p><strong>Cause</strong>: Trying to replace pending tx with lower gas.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Get pending transaction gas price
+let pending = get_pending_transaction(&amp;address, &amp;rpc).await?;
+
+// New gas must be at least 10% higher
+let new_gas = (pending.gas_price as f64 * 1.1) as u128;
+<span class="boring">}</span></code></pre>
+<h3 id="transaction-stuck-pending"><a class="header" href="#transaction-stuck-pending">Transaction stuck pending</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Option 1: Wait (can take hours during congestion)
+
+// Option 2: Speed up (replace with higher gas)
+let pending = get_pending_transaction(&amp;address, &amp;rpc).await?;
+let speed_up_hash = send_transaction_with_nonce(
+    &amp;from,
+    &amp;pending.to,
+    &amp;pending.value,
+    pending.nonce,
+    pending.gas_price * 2,  // Double the gas
+    &amp;key,
+    &amp;rpc
+).await?;
+
+// Option 3: Cancel (send 0 to yourself with same nonce)
+let cancel_hash = send_transaction_with_nonce(
+    &amp;from,
+    &amp;from,  // Send to self
+    "0",    // Zero value
+    pending.nonce,
+    pending.gas_price * 2,
+    &amp;key,
+    &amp;rpc
+).await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="testnet-faucets"><a class="header" href="#testnet-faucets">Testnet Faucets</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Network</th><th>Faucet</th><th>Amount</th></tr>
+</thead>
+<tbody>
+<tr><td>Sepolia</td><td><a href="https://sepoliafaucet.com">sepoliafaucet.com</a></td><td>0.5 ETH/day</td></tr>
+<tr><td>Sepolia</td><td><a href="https://sepoliafaucet.com">Alchemy</a></td><td>0.5 ETH/day</td></tr>
+<tr><td>Goerli</td><td><a href="https://goerlifaucet.com">goerlifaucet.com</a></td><td>0.25 ETH</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
+<ul>
+<li><a href="https://ethereum.org/developers">Ethereum Docs</a></li>
+<li><a href="https://eips.ethereum.org/EIPS/eip-1559">EIP-1559 Explained</a></li>
+<li><a href="https://eips.ethereum.org/EIPS/eip-20">ERC-20 Standard</a></li>
+<li><a href="https://etherscan.io">Etherscan</a> - Block Explorer</li>
+<li><a href="https://eth.llamarpc.com">eth.llamarpc.com</a> - Free RPC</li>
 </ul>
 
                     </main>

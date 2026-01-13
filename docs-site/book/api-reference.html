@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>API Reference - WalletD Developer Documentation</title>
+        <title>API Reference - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-22dc3a90.js"></script>
+        <script src="toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="print.html" title="Print this book" aria-label="Print this book">
@@ -178,17 +178,92 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="api-reference"><a class="header" href="#api-reference">API Reference</a></h1>
-<p>Run <code>cargo doc --open</code> for full documentation.</p>
+<blockquote>
+<p><strong>Complete function reference for all chains.</strong></p>
+</blockquote>
+<hr>
+<h2 id="universal-functions"><a class="header" href="#universal-functions">Universal Functions</a></h2>
+<p>Every chain implements these core functions:</p>
+<h3 id="derive_address"><a class="header" href="#derive_address">derive_address</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn derive_address(mnemonic: &amp;str, mode: WalletMode) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p>Derives blockchain address from BIP-39 mnemonic.</p>
+<h3 id="get_balance"><a class="header" href="#get_balance">get_balance</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn get_balance(address: &amp;str, rpc_url: &amp;str) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p>Returns balance in smallest unit (satoshis, wei, lamports, etc.)</p>
+<h3 id="send_transaction"><a class="header" href="#send_transaction">send_transaction</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn send_transaction(
+    from: &amp;str,
+    to: &amp;str,
+    amount: impl ToString,
+    rpc_url: &amp;str,
+) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p>Creates, signs, and broadcasts a transaction.</p>
+<hr>
+<h2 id="chain-specific-details"><a class="header" href="#chain-specific-details">Chain-Specific Details</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Chain</th><th>Path</th><th>Unit</th><th>Decimals</th></tr>
+</thead>
+<tbody>
+<tr><td>Bitcoin</td><td>m/84’/0’/0’/0/0</td><td>satoshi</td><td>8</td></tr>
+<tr><td>Ethereum</td><td>m/44’/60’/0’/0/0</td><td>wei</td><td>18</td></tr>
+<tr><td>Solana</td><td>m/44’/501’/0’/0’</td><td>lamport</td><td>9</td></tr>
+<tr><td>Polygon</td><td>m/44’/60’/0’/0/0</td><td>wei</td><td>18</td></tr>
+<tr><td>Arbitrum</td><td>m/44’/60’/0’/0/0</td><td>wei</td><td>18</td></tr>
+<tr><td>Base</td><td>m/44’/60’/0’/0/0</td><td>wei</td><td>18</td></tr>
+<tr><td>Avalanche</td><td>m/44’/60’/0’/0/0</td><td>wei</td><td>18</td></tr>
+<tr><td>Cardano</td><td>m/1852’/1815’/0’/0/0</td><td>lovelace</td><td>6</td></tr>
+<tr><td>Polkadot</td><td>m/44’/354’/0’/0’/0’</td><td>planck</td><td>10</td></tr>
+<tr><td>Cosmos</td><td>m/44’/118’/0’/0/0</td><td>uatom</td><td>6</td></tr>
+<tr><td>NEAR</td><td>m/44’/397’/0’</td><td>yoctoNEAR</td><td>24</td></tr>
+<tr><td>Tron</td><td>m/44’/195’/0’/0/0</td><td>sun</td><td>6</td></tr>
+<tr><td>Sui</td><td>m/44’/784’/0’/0’/0’</td><td>MIST</td><td>9</td></tr>
+<tr><td>Aptos</td><td>m/44’/637’/0’/0’/0’</td><td>octa</td><td>8</td></tr>
+<tr><td>TON</td><td>m/44’/607’/0’</td><td>nanoton</td><td>9</td></tr>
+<tr><td>ICP</td><td>m/44’/223’/0’/0/0</td><td>e8s</td><td>8</td></tr>
+<tr><td>Hedera</td><td>m/44’/3030’/0’/0/0</td><td>tinybar</td><td>8</td></tr>
+<tr><td>Monero</td><td>custom</td><td>atomic</td><td>12</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="error-types"><a class="header" href="#error-types">Error Types</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub enum WalletError {
+    InvalidMnemonic,
+    DerivationFailed(String),
+    NetworkError(String),
+    InvalidAddress,
+    InsufficientFunds,
+    TransactionFailed(String),
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="full-rustdoc"><a class="header" href="#full-rustdoc">Full Rustdoc</a></h2>
+<p>Generate complete API docs:</p>
+<pre><code class="language-bash">cargo doc --open --no-deps
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="security.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="recipes/portfolio-tracker.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="changelog.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="troubleshooting.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -198,11 +273,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="security.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="recipes/portfolio-tracker.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="changelog.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="troubleshooting.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

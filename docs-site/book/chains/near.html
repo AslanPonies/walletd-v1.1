@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>NEAR - WalletD Developer Documentation</title>
+        <title>NEAR - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -178,21 +178,92 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="near"><a class="header" href="#near">NEAR</a></h1>
-<p>NEAR Protocol support.</p>
-<h2 id="features"><a class="header" href="#features">Features</a></h2>
-<ul>
-<li>HD wallet derivation</li>
-<li>NEAR transfers</li>
-<li>Named accounts</li>
-</ul>
+<blockquote>
+<p><strong>Developer-friendly L1</strong> — Human-readable accounts with dynamic sharding.</p>
+</blockquote>
 <h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use walletd::near::{derive_address, get_balance};
+</span>use walletd::near::{derive_address, get_balance, send_transaction};
 
-let address = derive_address(&amp;mnemonic, Network::Mainnet)?;
-let balance = get_balance(&amp;address).await?;
+let address = derive_address(mnemonic, WalletMode::Mainnet)?;
+// → Implicit account (64-char hex)
+
+let balance = get_balance(&amp;address, "https://rpc.mainnet.near.org").await?;
+// → Balance in yoctoNEAR
+
+let tx = send_transaction(&amp;from, &amp;to, yocto_amount, &amp;rpc).await?;
 <span class="boring">}</span></code></pre>
+<h2 id="key-details"><a class="header" href="#key-details">Key Details</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Derivation Path</td><td><code>m/44'/397'/0'</code></td></tr>
+<tr><td>Native Unit</td><td>yoctoNEAR</td></tr>
+<tr><td>Decimals</td><td>24 (1 NEAR = 10^24 yoctoNEAR)</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="unit-conversion"><a class="header" href="#unit-conversion">Unit Conversion</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn yocto_to_near(yocto: u128) -&gt; f64 {
+    yocto as f64 / 1e24
+}
+
+fn near_to_yocto(near: f64) -&gt; u128 {
+    (near * 1e24) as u128
+}
+<span class="boring">}</span></code></pre>
+<h2 id="account-types"><a class="header" href="#account-types">Account Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Type</th><th>Format</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td>Implicit</td><td>64-char hex</td><td><code>98793cd91a3f870fb126f66285...</code></td></tr>
+<tr><td>Named</td><td>Human-readable</td><td><code>alice.near</code></td></tr>
+<tr><td>Sub-account</td><td>Hierarchical</td><td><code>app.alice.near</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="creating-named-accounts"><a class="header" href="#creating-named-accounts">Creating Named Accounts</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::near::account;
+
+// Create named account (costs NEAR)
+let tx = account::create(
+    "myname.near",
+    &amp;public_key,
+    initial_balance,
+    &amp;rpc
+).await?;
+<span class="boring">}</span></code></pre>
+<h2 id="rpc-endpoints"><a class="header" href="#rpc-endpoints">RPC Endpoints</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Network</th><th>URL</th></tr>
+</thead>
+<tbody>
+<tr><td>Mainnet</td><td><code>https://rpc.mainnet.near.org</code></td></tr>
+<tr><td>Testnet</td><td><code>https://rpc.testnet.near.org</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="testnet-faucet"><a class="header" href="#testnet-faucet">Testnet Faucet</a></h2>
+<p>Create account at <a href="https://wallet.testnet.near.org">wallet.testnet.near.org</a></p>
+<h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
+<ul>
+<li><a href="https://docs.near.org">NEAR Docs</a></li>
+<li><a href="https://explorer.near.org">NEAR Explorer</a></li>
+<li><a href="https://wallet.near.org">NEAR Wallet</a></li>
+</ul>
 
                     </main>
 

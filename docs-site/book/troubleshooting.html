@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Cardano - WalletD Documentation</title>
+        <title>Troubleshooting - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -12,33 +12,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="../favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
-        <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-2459343d.css">
-        <link rel="stylesheet" href="../css/chrome-ae938929.css">
-        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "../";
+            const path_to_root = "";
             const default_light_theme = "navy";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-c119205a.js";
+            window.path_to_searchindex_js = "searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-3f898b94.js"></script>
+        <script src="toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -105,7 +105,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
             </noscript>
             <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -140,7 +140,7 @@
                     <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
-                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
                             <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
                         <a href="https://github.com/AslanPonies/walletd-v1.1" title="Git repository" aria-label="Git repository">
@@ -177,108 +177,474 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="cardano"><a class="header" href="#cardano">Cardano</a></h1>
+                        <h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
 <blockquote>
-<p><strong>Research-driven L1</strong> — Ouroboros proof-of-stake with formal verification.</p>
+<p><strong>Fix common issues fast.</strong> Every error, explained with solutions.</p>
 </blockquote>
-<h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use walletd::cardano::{derive_address, get_balance, send_transaction};
-
-let address = derive_address(mnemonic, WalletMode::Mainnet)?;
-// → "addr1qy..."
-
-let balance = get_balance(&amp;address, &amp;rpc).await?;
-// → Balance in lovelace
-
-let tx = send_transaction(&amp;from, &amp;to, lovelace_amount, &amp;rpc).await?;
-<span class="boring">}</span></code></pre>
-<h2 id="key-details"><a class="header" href="#key-details">Key Details</a></h2>
+<hr>
+<h2 id="quick-diagnosis"><a class="header" href="#quick-diagnosis">Quick Diagnosis</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Property</th><th>Value</th></tr>
+<tr><th>Symptom</th><th>Likely Cause</th><th>Jump To</th></tr>
 </thead>
 <tbody>
-<tr><td>Derivation Path</td><td><code>m/1852'/1815'/0'/0/0</code> (CIP-1852)</td></tr>
-<tr><td>Address Prefix</td><td><code>addr1</code> (mainnet), <code>addr_test1</code> (testnet)</td></tr>
-<tr><td>Native Unit</td><td>lovelace</td></tr>
-<tr><td>Decimals</td><td>6 (1 ADA = 1,000,000 lovelace)</td></tr>
+<tr><td>“Invalid mnemonic”</td><td>Wrong word count or typo</td><td><a href="#mnemonic-errors">Mnemonic Errors</a></td></tr>
+<tr><td>“Network error”</td><td>RPC unreachable</td><td><a href="#network-errors">Network Errors</a></td></tr>
+<tr><td>“Insufficient funds”</td><td>Balance too low for tx + fee</td><td><a href="#transaction-errors">Transaction Errors</a></td></tr>
+<tr><td>Transaction stuck</td><td>Gas too low</td><td><a href="#stuck-transactions">Stuck Transactions</a></td></tr>
+<tr><td>Wrong address format</td><td>Network mismatch</td><td><a href="#address-errors">Address Errors</a></td></tr>
+<tr><td>Build fails</td><td>Missing dependencies</td><td><a href="#build-errors">Build Errors</a></td></tr>
 </tbody>
 </table>
 </div>
-<h2 id="unit-conversion"><a class="header" href="#unit-conversion">Unit Conversion</a></h2>
+<hr>
+<h2 id="mnemonic-errors"><a class="header" href="#mnemonic-errors">Mnemonic Errors</a></h2>
+<h3 id="invalidmnemonic"><a class="header" href="#invalidmnemonic">“InvalidMnemonic”</a></h3>
+<p><strong>Symptoms:</strong></p>
+<pre><code>Error: InvalidMnemonic
+</code></pre>
+<p><strong>Causes &amp; Solutions:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Cause</th><th>Solution</th></tr>
+</thead>
+<tbody>
+<tr><td>Wrong word count</td><td>Must be exactly 12 or 24 words</td></tr>
+<tr><td>Typo in a word</td><td>Check against <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt">BIP-39 word list</a></td></tr>
+<tr><td>Extra spaces</td><td>Trim whitespace, single space between words</td></tr>
+<tr><td>Wrong language</td><td>Use English word list</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Debug:</strong></p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>fn lovelace_to_ada(lovelace: u64) -&gt; f64 {
-    lovelace as f64 / 1_000_000.0
+</span>fn validate_mnemonic(phrase: &amp;str) -&gt; Result&lt;(), String&gt; {
+    let words: Vec&lt;&amp;str&gt; = phrase.split_whitespace().collect();
+    
+    // Check word count
+    if words.len() != 12 &amp;&amp; words.len() != 24 {
+        return Err(format!(
+            "Expected 12 or 24 words, got {}", 
+            words.len()
+        ));
+    }
+    
+    // Check each word (simplified)
+    let valid_words = include_str!("bip39-english.txt")
+        .lines()
+        .collect::&lt;Vec&lt;_&gt;&gt;();
+    
+    for (i, word) in words.iter().enumerate() {
+        if !valid_words.contains(word) {
+            return Err(format!(
+                "Word {} '{}' is not in BIP-39 list. Did you mean '{}'?",
+                i + 1,
+                word,
+                find_similar(word, &amp;valid_words)
+            ));
+        }
+    }
+    
+    Ok(())
 }
-
-fn ada_to_lovelace(ada: f64) -&gt; u64 {
-    (ada * 1_000_000.0) as u64
-}
 <span class="boring">}</span></code></pre>
-<h2 id="address-types"><a class="header" href="#address-types">Address Types</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Type</th><th>Prefix</th><th>Description</th></tr>
-</thead>
-<tbody>
-<tr><td>Base</td><td><code>addr1q</code></td><td>Standard payment + staking</td></tr>
-<tr><td>Enterprise</td><td><code>addr1v</code></td><td>Payment only (no staking)</td></tr>
-<tr><td>Pointer</td><td><code>addr1g</code></td><td>References stake pool</td></tr>
-<tr><td>Bootstrap</td><td><code>Ae2</code></td><td>Legacy Byron era</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="staking"><a class="header" href="#staking">Staking</a></h2>
-<p>Cardano supports <strong>liquid staking</strong> - your ADA remains spendable while staked.</p>
+<hr>
+<h2 id="network-errors"><a class="header" href="#network-errors">Network Errors</a></h2>
+<h3 id="networkerror-connection-refused"><a class="header" href="#networkerror-connection-refused">“NetworkError: connection refused”</a></h3>
+<p><strong>Symptoms:</strong></p>
+<pre><code>Error: NetworkError("connection refused")
+Error: NetworkError("timeout")
+Error: NetworkError("DNS resolution failed")
+</code></pre>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Check internet connection</strong></p>
+<pre><code class="language-bash">curl -I https://blockstream.info/api
+</code></pre>
+</li>
+<li>
+<p><strong>Try alternative RPC</strong></p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use walletd::staking::CardanoStaking;
-
-let staking = CardanoStaking::new(&amp;rpc);
-
-// Get stake pools
-let pools = staking.get_validators(10).await?;
-
-// Delegate to pool
-let tx = staking.delegate(&amp;my_address, &amp;pool_id).await?;
-
-// Check rewards
-let rewards = staking.get_rewards(&amp;my_address).await?;
+</span>// Instead of
+let rpc = "https://eth.llamarpc.com";
+// Try
+let rpc = "https://rpc.ankr.com/eth";
+// Or
+let rpc = "https://cloudflare-eth.com";
 <span class="boring">}</span></code></pre>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Property</th><th>Value</th></tr>
-</thead>
-<tbody>
-<tr><td>Min Stake</td><td>2 ADA (deposit)</td></tr>
-<tr><td>Unbonding</td><td>None (liquid)</td></tr>
-<tr><td>Rewards</td><td>Every 5 days (epoch)</td></tr>
-<tr><td>APY</td><td>~3-5%</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
+</li>
+<li>
+<p><strong>Check if RPC is down</strong></p>
 <ul>
-<li><a href="https://docs.cardano.org">Cardano Docs</a></li>
-<li><a href="https://cardanoscan.io">CardanoScan</a></li>
-<li><a href="https://pool.pm">Pool.pm</a> - Stake pool explorer</li>
+<li>Bitcoin: <a href="https://blockstream.info/api">blockstream.info/api</a></li>
+<li>Ethereum: <a href="https://etherscan.io/apis">etherscan.io/apis</a></li>
 </ul>
+</li>
+<li>
+<p><strong>Handle timeouts gracefully</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use tokio::time::timeout;
+
+let result = timeout(
+    Duration::from_secs(30),
+    get_balance(&amp;address, &amp;rpc)
+).await;
+
+match result {
+    Ok(Ok(balance)) =&gt; println!("Balance: {}", balance),
+    Ok(Err(e)) =&gt; eprintln!("RPC error: {}", e),
+    Err(_) =&gt; eprintln!("Request timed out - try another RPC"),
+}
+<span class="boring">}</span></code></pre>
+</li>
+</ol>
+<h3 id="rate-limited"><a class="header" href="#rate-limited">“Rate limited”</a></h3>
+<p><strong>Symptoms:</strong></p>
+<pre><code>Error: RpcError(429)
+Error: "Too many requests"
+</code></pre>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Add delays between requests</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>for address in addresses {
+    let balance = get_balance(&amp;address, &amp;rpc).await?;
+    tokio::time::sleep(Duration::from_millis(100)).await;
+}
+<span class="boring">}</span></code></pre>
+</li>
+<li>
+<p><strong>Use a paid RPC provider</strong></p>
+<ul>
+<li><a href="https://infura.io">Infura</a></li>
+<li><a href="https://alchemy.com">Alchemy</a></li>
+<li><a href="https://quicknode.com">QuickNode</a></li>
+</ul>
+</li>
+<li>
+<p><strong>Implement exponential backoff</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn with_retry&lt;T, F, Fut&gt;(f: F, max_retries: u32) -&gt; Result&lt;T, Error&gt;
+where
+    F: Fn() -&gt; Fut,
+    Fut: Future&lt;Output = Result&lt;T, Error&gt;&gt;,
+{
+    let mut delay = 1;
+    for attempt in 0..max_retries {
+        match f().await {
+            Ok(result) =&gt; return Ok(result),
+            Err(e) if e.is_rate_limit() =&gt; {
+                tokio::time::sleep(Duration::from_secs(delay)).await;
+                delay *= 2;  // Exponential backoff
+            }
+            Err(e) =&gt; return Err(e),
+        }
+    }
+    Err(Error::MaxRetriesExceeded)
+}
+<span class="boring">}</span></code></pre>
+</li>
+</ol>
+<hr>
+<h2 id="transaction-errors"><a class="header" href="#transaction-errors">Transaction Errors</a></h2>
+<h3 id="insufficientfunds"><a class="header" href="#insufficientfunds">“InsufficientFunds”</a></h3>
+<p><strong>Symptoms:</strong></p>
+<pre><code>Error: InsufficientFunds
+Error: "insufficient funds for transfer"
+</code></pre>
+<p><strong>Cause</strong>: Balance &lt; amount + fees</p>
+<p><strong>Debug:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn check_if_sendable(
+    address: &amp;str,
+    amount: u64,
+    rpc: &amp;str,
+) -&gt; Result&lt;bool, Error&gt; {
+    let balance: u64 = get_balance(address, rpc).await?.parse()?;
+    let fee = estimate_fee(rpc).await?;
+    
+    println!("Balance:  {} sats", balance);
+    println!("Amount:   {} sats", amount);
+    println!("Est. fee: {} sats", fee);
+    println!("Total:    {} sats", amount + fee);
+    println!("Shortfall: {} sats", (amount + fee).saturating_sub(balance));
+    
+    Ok(balance &gt;= amount + fee)
+}
+<span class="boring">}</span></code></pre>
+<h3 id="dust-amount"><a class="header" href="#dust-amount">“Dust amount”</a></h3>
+<p><strong>Symptoms:</strong></p>
+<pre><code>Error: "Output below dust threshold"
+</code></pre>
+<p><strong>Cause</strong>: Sending less than minimum viable amount</p>
+<p><strong>Solution:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>const DUST_THRESHOLD: u64 = 546;  // Bitcoin
+
+fn validate_amount(amount: u64) -&gt; Result&lt;(), Error&gt; {
+    if amount &lt; DUST_THRESHOLD {
+        return Err(Error::DustAmount(format!(
+            "Amount {} is below dust threshold {}",
+            amount, DUST_THRESHOLD
+        )));
+    }
+    Ok(())
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="stuck-transactions"><a class="header" href="#stuck-transactions">Stuck Transactions</a></h2>
+<h3 id="bitcoin-transaction-not-confirming"><a class="header" href="#bitcoin-transaction-not-confirming">Bitcoin: Transaction not confirming</a></h3>
+<p><strong>Symptoms:</strong></p>
+<ul>
+<li>Transaction in mempool for hours/days</li>
+<li>0 confirmations</li>
+</ul>
+<p><strong>Diagnosis:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Check current fee market
+let fees = get_fee_estimates(&amp;rpc).await?;
+println!("Current fees:");
+println!("  Fast (10 min): {} sat/vB", fees.fastest);
+println!("  Medium (30 min): {} sat/vB", fees.half_hour);
+println!("  Slow (1 hour): {} sat/vB", fees.hour);
+
+// Check your transaction's fee
+let tx = get_transaction(&amp;txid, &amp;rpc).await?;
+println!("Your tx fee: {} sat/vB", tx.fee_rate);
+
+if tx.fee_rate &lt; fees.hour {
+    println!("⚠️ Fee too low - transaction may be stuck");
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Wait</strong> - Mempool clears during low activity (weekends, nights)</p>
+</li>
+<li>
+<p><strong>RBF (Replace-By-Fee)</strong> - If enabled</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let new_txid = bump_fee(&amp;old_txid, new_fee_rate, &amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+</li>
+<li>
+<p><strong>CPFP (Child-Pays-For-Parent)</strong> - Spend the unconfirmed output</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Create new tx spending unconfirmed output with high fee
+<span class="boring">}</span></code></pre>
+</li>
+</ol>
+<h3 id="ethereum-transaction-pending"><a class="header" href="#ethereum-transaction-pending">Ethereum: Transaction pending</a></h3>
+<p><strong>Diagnosis:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let nonce = get_nonce(&amp;address, &amp;rpc).await?;
+let pending_nonce = get_pending_nonce(&amp;address, &amp;rpc).await?;
+
+if pending_nonce &gt; nonce {
+    println!("You have {} pending transactions", pending_nonce - nonce);
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Speed up</strong> - Send same tx with higher gas</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let pending = get_pending_tx(&amp;address, &amp;rpc).await?;
+send_transaction_with_nonce(
+    &amp;from, &amp;to, &amp;value,
+    pending.nonce,
+    pending.gas_price * 2,  // Double gas
+    &amp;key, &amp;rpc
+).await?;
+<span class="boring">}</span></code></pre>
+</li>
+<li>
+<p><strong>Cancel</strong> - Send 0 ETH to yourself with same nonce</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>send_transaction_with_nonce(
+    &amp;from, &amp;from,  // To self
+    "0",           // Zero value
+    stuck_nonce,
+    high_gas_price,
+    &amp;key, &amp;rpc
+).await?;
+<span class="boring">}</span></code></pre>
+</li>
+</ol>
+<hr>
+<h2 id="address-errors"><a class="header" href="#address-errors">Address Errors</a></h2>
+<h3 id="invalid-address"><a class="header" href="#invalid-address">“Invalid address”</a></h3>
+<p><strong>Symptoms:</strong></p>
+<pre><code>Error: InvalidAddress
+Error: "Invalid checksum"
+</code></pre>
+<p><strong>Causes:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Issue</th><th>Example</th><th>Fix</th></tr>
+</thead>
+<tbody>
+<tr><td>Missing prefix</td><td><code>1234abcd...</code></td><td>Add <code>0x</code> for Ethereum</td></tr>
+<tr><td>Wrong length</td><td><code>0x123</code></td><td>Must be 42 chars (ETH)</td></tr>
+<tr><td>Bad characters</td><td><code>0xGGGG...</code></td><td>Only hex (0-9, a-f)</td></tr>
+<tr><td>Wrong network</td><td><code>bc1q...</code> on testnet</td><td>Use <code>tb1q...</code> for testnet</td></tr>
+<tr><td>Failed checksum</td><td>Mixed case wrong</td><td>Use checksummed address</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Validation:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn validate_address(address: &amp;str, chain: &amp;str) -&gt; Result&lt;(), String&gt; {
+    match chain {
+        "BTC" =&gt; {
+            if !address.starts_with("bc1") &amp;&amp; 
+               !address.starts_with("1") &amp;&amp; 
+               !address.starts_with("3") {
+                return Err("Invalid Bitcoin address prefix".into());
+            }
+        }
+        "ETH" =&gt; {
+            if !address.starts_with("0x") {
+                return Err("Ethereum address must start with 0x".into());
+            }
+            if address.len() != 42 {
+                return Err(format!(
+                    "Ethereum address must be 42 chars, got {}", 
+                    address.len()
+                ));
+            }
+        }
+        _ =&gt; {}
+    }
+    Ok(())
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="build-errors"><a class="header" href="#build-errors">Build Errors</a></h2>
+<h3 id="openssl-not-found"><a class="header" href="#openssl-not-found">“OpenSSL not found”</a></h3>
+<p><strong>macOS:</strong></p>
+<pre><code class="language-bash">brew install openssl
+export OPENSSL_DIR=$(brew --prefix openssl)
+export PKG_CONFIG_PATH=$(brew --prefix openssl)/lib/pkgconfig
+</code></pre>
+<p><strong>Ubuntu:</strong></p>
+<pre><code class="language-bash">sudo apt-get install libssl-dev pkg-config
+</code></pre>
+<h3 id="secp256k1-build-failed"><a class="header" href="#secp256k1-build-failed">“secp256k1 build failed”</a></h3>
+<p><strong>macOS:</strong></p>
+<pre><code class="language-bash">brew install automake autoconf libtool
+</code></pre>
+<p><strong>Ubuntu:</strong></p>
+<pre><code class="language-bash">sudo apt-get install build-essential automake autoconf libtool
+</code></pre>
+<h3 id="cant-find-crate"><a class="header" href="#cant-find-crate">“Can’t find crate”</a></h3>
+<pre><code class="language-bash"># Clear cargo cache and rebuild
+cargo clean
+cargo build
+</code></pre>
+<hr>
+<h2 id="common-mistakes"><a class="header" href="#common-mistakes">Common Mistakes</a></h2>
+<h3 id="1-using-mainnet-mnemonic-on-testnet"><a class="header" href="#1-using-mainnet-mnemonic-on-testnet">1. Using mainnet mnemonic on testnet</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ❌ Wrong - mainnet address on testnet RPC
+let addr = derive_address(mnemonic, WalletMode::Mainnet)?;
+get_balance(&amp;addr, "https://blockstream.info/testnet/api").await?;
+
+// ✅ Correct - match mode to RPC
+let addr = derive_address(mnemonic, WalletMode::Testnet)?;
+get_balance(&amp;addr, "https://blockstream.info/testnet/api").await?;
+<span class="boring">}</span></code></pre>
+<h3 id="2-hardcoding-gas-prices"><a class="header" href="#2-hardcoding-gas-prices">2. Hardcoding gas prices</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ❌ Wrong - gas prices change constantly
+let gas_price = 20_000_000_000; // 20 gwei
+
+// ✅ Correct - always estimate
+let gas = get_gas_price(&amp;rpc).await?;
+let gas_price = gas.base_fee + gas.priority_fee;
+<span class="boring">}</span></code></pre>
+<h3 id="3-not-handling-async-properly"><a class="header" href="#3-not-handling-async-properly">3. Not handling async properly</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ❌ Wrong - blocking in async context
+let balance = futures::executor::block_on(get_balance(&amp;addr, &amp;rpc));
+
+// ✅ Correct - use async/await
+let balance = get_balance(&amp;addr, &amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="4-ignoring-errors"><a class="header" href="#4-ignoring-errors">4. Ignoring errors</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// ❌ Wrong - silent failure
+let balance = get_balance(&amp;addr, &amp;rpc).await.unwrap_or_default();
+
+// ✅ Correct - handle errors
+let balance = match get_balance(&amp;addr, &amp;rpc).await {
+    Ok(b) =&gt; b,
+    Err(e) =&gt; {
+        eprintln!("Failed to get balance: {}", e);
+        return Err(e.into());
+    }
+};
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="still-stuck"><a class="header" href="#still-stuck">Still Stuck?</a></h2>
+<ol>
+<li><strong>Check GitHub Issues</strong>: <a href="https://github.com/AslanPonies/walletd-v1.1/issues">github.com/AslanPonies/walletd-v1.1/issues</a></li>
+<li><strong>Search closed issues</strong> - your problem may be solved</li>
+<li><strong>Open new issue</strong> with:
+<ul>
+<li>WalletD version</li>
+<li>Rust version (<code>rustc --version</code>)</li>
+<li>OS and version</li>
+<li>Full error message</li>
+<li>Minimal reproduction code</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="debug-mode"><a class="header" href="#debug-mode">Debug Mode</a></h2>
+<p>Enable verbose logging:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// At start of main()
+std::env::set_var("RUST_LOG", "walletd=debug");
+env_logger::init();
+<span class="boring">}</span></code></pre>
+<p>Or via environment:</p>
+<pre><code class="language-bash">RUST_LOG=walletd=debug cargo run
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../chains/avalanche.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="api-reference.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../chains/polkadot.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="comparison.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -288,11 +654,11 @@ let rewards = staking.get_rewards(&amp;my_address).await?;
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../chains/avalanche.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="api-reference.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../chains/polkadot.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="comparison.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
@@ -312,13 +678,13 @@ let rewards = staking.get_rewards(&amp;my_address).await?;
         </script>
 
 
-        <script src="../elasticlunr-ef4e11c1.min.js"></script>
-        <script src="../mark-09e88c2c.min.js"></script>
-        <script src="../searcher-c2a407aa.js"></script>
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
 
-        <script src="../clipboard-1626706a.min.js"></script>
-        <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-a0b12cfe.js"></script>
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
 

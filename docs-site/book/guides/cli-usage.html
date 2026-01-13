@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>CLI Usage - WalletD Developer Documentation</title>
+        <title>CLI Usage - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -178,57 +178,25 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="cli-usage"><a class="header" href="#cli-usage">CLI Usage</a></h1>
-<p>The WalletD CLI provides an interactive interface for managing wallets across all supported chains.</p>
 <h2 id="launch"><a class="header" href="#launch">Launch</a></h2>
-<pre><code class="language-bash">./walletd
+<pre><code class="language-bash">./target/release/walletd
 </code></pre>
 <h2 id="main-menu"><a class="header" href="#main-menu">Main Menu</a></h2>
 <pre><code>╔══════════════════════════════════════════════════════════════╗
 ║                    WalletD CLI v0.2.1                        ║
-║              Multi-Chain Cryptocurrency Wallet               ║
 ╠══════════════════════════════════════════════════════════════╣
-║  Supported Chains:                                           ║
-║  [1]  Bitcoin      [2]  Ethereum    [3]  Solana             ║
-║  [4]  ICP          [5]  Hedera      [6]  Monero             ║
-║  [7]  Base         [8]  Polygon     [9]  Avalanche          ║
-║  [10] Arbitrum     [11] Cardano     [12] Polkadot           ║
-║  [13] Cosmos       [14] NEAR        [15] Tron               ║
-║  [16] Sui          [17] Aptos       [18] TON                ║
+║  [1] Bitcoin     [2] Ethereum    [3] Solana    [4] Base      ║
+║  [5] Polygon     [6] Arbitrum    [7] Avalanche [8] Cardano   ║
+║  ...                                                         ║
 ╚══════════════════════════════════════════════════════════════╝
 </code></pre>
-<h2 id="network-selection"><a class="header" href="#network-selection">Network Selection</a></h2>
-<ul>
-<li><strong>Testnet</strong> - For development and testing (recommended)</li>
-<li><strong>Mainnet</strong> - Production use with real funds</li>
-<li><strong>Demo</strong> - Simulated mode, no network connection</li>
-</ul>
-<h2 id="wallet-operations"><a class="header" href="#wallet-operations">Wallet Operations</a></h2>
-<h3 id="generate-new-wallet"><a class="header" href="#generate-new-wallet">Generate New Wallet</a></h3>
-<p>Creates a new HD wallet with a 24-word mnemonic phrase.</p>
-<h3 id="import-wallet"><a class="header" href="#import-wallet">Import Wallet</a></h3>
-<p>Import an existing wallet using:</p>
-<ul>
-<li>Mnemonic phrase (12/24 words)</li>
-<li>Private key (hex format)</li>
-</ul>
-<h3 id="check-balance"><a class="header" href="#check-balance">Check Balance</a></h3>
-<p>Query the current balance for any address.</p>
-<h3 id="send-transaction"><a class="header" href="#send-transaction">Send Transaction</a></h3>
-<p>Create and broadcast transactions.</p>
-<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
-<pre><code class="language-bash"># Generate Bitcoin testnet wallet
-./walletd
-&gt; Select: 1 (Bitcoin)
-&gt; Select: Testnet
-&gt; Select: Generate New Wallet
-
-# Check Ethereum balance
-./walletd
-&gt; Select: 2 (Ethereum)
-&gt; Select: Mainnet
-&gt; Select: Check Balance
-&gt; Enter address: 0x...
-</code></pre>
+<h2 id="operations"><a class="header" href="#operations">Operations</a></h2>
+<ol>
+<li><strong>Generate Wallet</strong> - New 24-word mnemonic</li>
+<li><strong>Import Wallet</strong> - Existing mnemonic</li>
+<li><strong>Check Balance</strong> - Query address balance</li>
+<li><strong>Send Transaction</strong> - Create and broadcast</li>
+</ol>
 
                     </main>
 

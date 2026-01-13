@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Monero - WalletD Developer Documentation</title>
+        <title>Monero - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -178,21 +178,85 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="monero"><a class="header" href="#monero">Monero</a></h1>
-<p>Privacy-focused Monero blockchain support.</p>
-<h2 id="features"><a class="header" href="#features">Features</a></h2>
-<ul>
-<li>HD wallet derivation</li>
-<li>Private transactions</li>
-<li>View keys and spend keys</li>
-</ul>
+<blockquote>
+<p><strong>Privacy-first cryptocurrency</strong> — Untraceable transactions by default.</p>
+</blockquote>
 <h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use walletd::monero::{derive_address, get_balance};
 
-let address = derive_address(&amp;mnemonic, Network::Mainnet)?;
-let balance = get_balance(&amp;address).await?;
+let address = derive_address(mnemonic, WalletMode::Mainnet)?;
+// → "4..." (95 characters)
+
+let balance = get_balance(&amp;address, &amp;rpc).await?;
+// → Balance in atomic units
 <span class="boring">}</span></code></pre>
+<h2 id="key-details"><a class="header" href="#key-details">Key Details</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Key Derivation</td><td>Monero-specific (not BIP-44)</td></tr>
+<tr><td>Native Unit</td><td>atomic unit (piconero)</td></tr>
+<tr><td>Decimals</td><td>12 (1 XMR = 10^12 atomic units)</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="unit-conversion"><a class="header" href="#unit-conversion">Unit Conversion</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn atomic_to_xmr(atomic: u64) -&gt; f64 {
+    atomic as f64 / 1_000_000_000_000.0
+}
+
+fn xmr_to_atomic(xmr: f64) -&gt; u64 {
+    (xmr * 1_000_000_000_000.0) as u64
+}
+<span class="boring">}</span></code></pre>
+<h2 id="key-types"><a class="header" href="#key-types">Key Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td>Spend Key</td><td>Required to send funds</td></tr>
+<tr><td>View Key</td><td>View incoming transactions (read-only)</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Get view-only wallet
+let view_key = monero::get_view_key(mnemonic)?;
+<span class="boring">}</span></code></pre>
+<h2 id="address-types"><a class="header" href="#address-types">Address Types</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Prefix</th><th>Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>4</code></td><td>Standard address</td></tr>
+<tr><td><code>8</code></td><td>Subaddress (privacy)</td></tr>
+<tr><td><code>4</code> (long)</td><td>Integrated (with payment ID)</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="privacy-features"><a class="header" href="#privacy-features">Privacy Features</a></h2>
+<ul>
+<li><strong>Ring Signatures</strong>: Sender hidden among decoys</li>
+<li><strong>Stealth Addresses</strong>: One-time receiving addresses</li>
+<li><strong>RingCT</strong>: Transaction amounts hidden</li>
+</ul>
+<h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
+<ul>
+<li><a href="https://www.getmonero.org/resources/developer-guides/">Monero Docs</a></li>
+<li><a href="https://xmrchain.net">XMRchain Explorer</a></li>
+</ul>
 
                     </main>
 
@@ -202,7 +266,7 @@ let balance = get_balance(&amp;address).await?;
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../chains/base.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../recipes/payment-gateway.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -216,7 +280,7 @@ let balance = get_balance(&amp;address).await?;
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../chains/base.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../recipes/payment-gateway.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

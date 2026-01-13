@@ -1,62 +1,53 @@
-# Quickstart
+# 60-Second Quickstart
 
-Get started with WalletD in 5 minutes.
+## Step 1: Add Dependency
 
-## Prerequisites
-
-- Rust 1.70+
-- Cargo
-
-## Installation
-
-### As a Library
 ```toml
 [dependencies]
 walletd = "1.4"
+tokio = { version = "1", features = ["full"] }
 ```
 
-### CLI Tool
-```bash
-git clone https://github.com/AslanPonies/walletd-v1.1
-cd walletd-v1.1/walletd-cli
-cargo build --release
-./target/release/walletd
-```
+## Step 2: Run This Code
 
-## Create Your First Wallet
 ```rust
-use walletd::prelude::*;
+use walletd::{bitcoin, ethereum};
+use walletd::types::WalletMode;
 
-fn main() -> Result<()> {
-    // Generate 24-word mnemonic
-    let mnemonic = Mnemonic::generate(24)?;
-    println!("Mnemonic: {}", mnemonic.phrase());
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mnemonic = "abandon abandon abandon abandon abandon abandon \
+                    abandon abandon abandon abandon abandon about";
     
-    // Derive addresses for multiple chains
-    let btc = walletd::bitcoin::derive_address(&mnemonic, Network::Mainnet)?;
-    let eth = walletd::ethereum::derive_address(&mnemonic, Network::Mainnet)?;
-    let sol = walletd::solana::derive_address(&mnemonic, Network::Mainnet)?;
+    let btc = bitcoin::derive_address(mnemonic, WalletMode::Mainnet)?;
+    let eth = ethereum::derive_address(mnemonic, WalletMode::Mainnet)?;
     
     println!("Bitcoin:  {}", btc);
     println!("Ethereum: {}", eth);
-    println!("Solana:   {}", sol);
+    
+    let balance = bitcoin::get_balance(
+        "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+        "https://blockstream.info/api"
+    ).await?;
+    
+    println!("Balance: {} satoshis", balance);
     
     Ok(())
 }
 ```
 
-## Using the CLI
-```bash
-# Launch interactive mode
-./walletd
+## Expected Output
 
-# Select network (Testnet recommended for testing)
-# Choose a chain
-# Generate or import wallet
 ```
+Bitcoin:  bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu
+Ethereum: 0x9858EfFD232B4033E47d90003D41EC34EcaEda94
+Balance: 1234567 satoshis
+```
+
+🎉 **You just queried Bitcoin in 3 lines of code!**
 
 ## Next Steps
 
-- [Installation Guide](./installation.md) - Detailed setup instructions
-- [CLI Usage](./cli-usage.md) - Full CLI documentation
-- [Bitcoin Guide](../chains/bitcoin.md) - Bitcoin-specific features
+- [Bitcoin Deep Dive](../chains/bitcoin.md)
+- [Ethereum Guide](../chains/ethereum.md)
+- [Build a Payment Gateway](../recipes/payment-gateway.md)

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Solana - WalletD Developer Documentation</title>
+        <title>Solana - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -178,22 +178,108 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="solana"><a class="header" href="#solana">Solana</a></h1>
-<p>High-performance Solana blockchain support.</p>
-<h2 id="features"><a class="header" href="#features">Features</a></h2>
-<ul>
-<li>HD wallet derivation</li>
-<li>SPL token support</li>
-<li>Transaction creation</li>
-<li>Staking support</li>
-</ul>
+<blockquote>
+<p><strong>High-performance L1</strong> — 65,000 TPS with sub-second finality.</p>
+</blockquote>
 <h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use walletd::solana::{derive_address, get_balance};
+</span>use walletd::solana::{derive_address, get_balance, send_transaction};
 
-let address = derive_address(&amp;mnemonic, Network::Mainnet)?;
-let balance = get_balance(&amp;address).await?;
+let address = derive_address(mnemonic, WalletMode::Mainnet)?;
+let balance = get_balance(&amp;address, "https://api.mainnet-beta.solana.com").await?;
+let sig = send_transaction(&amp;from, &amp;to, lamports, &amp;key, &amp;rpc).await?;
 <span class="boring">}</span></code></pre>
+<h2 id="api-reference"><a class="header" href="#api-reference">API Reference</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Function</th><th>Returns</th></tr>
+</thead>
+<tbody>
+<tr><td><code>derive_address(mnemonic, mode)</code></td><td>Base58 public key</td></tr>
+<tr><td><code>get_balance(address, rpc)</code></td><td>Balance in lamports</td></tr>
+<tr><td><code>send_transaction(from, to, amount, rpc)</code></td><td>Transaction signature</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="key-details"><a class="header" href="#key-details">Key Details</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Derivation Path</td><td><code>m/44'/501'/0'/0'</code></td></tr>
+<tr><td>Address Format</td><td>Base58 (32 bytes)</td></tr>
+<tr><td>Native Unit</td><td>lamport</td></tr>
+<tr><td>Decimals</td><td>9 (1 SOL = 10^9 lamports)</td></tr>
+<tr><td>Block Time</td><td>~400ms</td></tr>
+<tr><td>Finality</td><td>~12 seconds</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="rpc-endpoints"><a class="header" href="#rpc-endpoints">RPC Endpoints</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Network</th><th>URL</th><th>Rate Limit</th></tr>
+</thead>
+<tbody>
+<tr><td>Mainnet</td><td><code>https://api.mainnet-beta.solana.com</code></td><td>Heavy</td></tr>
+<tr><td>Devnet</td><td><code>https://api.devnet.solana.com</code></td><td>Moderate</td></tr>
+<tr><td>Testnet</td><td><code>https://api.testnet.solana.com</code></td><td>Moderate</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Note</strong>: Use dedicated RPC (Helius, QuickNode) for production.</p>
+<h2 id="unit-conversion"><a class="header" href="#unit-conversion">Unit Conversion</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn lamports_to_sol(lamports: u64) -&gt; f64 {
+    lamports as f64 / 1_000_000_000.0
+}
+
+fn sol_to_lamports(sol: f64) -&gt; u64 {
+    (sol * 1_000_000_000.0) as u64
+}
+<span class="boring">}</span></code></pre>
+<h2 id="spl-tokens"><a class="header" href="#spl-tokens">SPL Tokens</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::solana::spl;
+
+// Get token balance
+let usdc_balance = spl::get_balance(
+    &amp;owner,
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC mint
+    &amp;rpc
+).await?;
+
+// Transfer tokens
+let sig = spl::transfer(&amp;from, &amp;to, &amp;mint, amount, &amp;key, &amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<h2 id="common-token-mints"><a class="header" href="#common-token-mints">Common Token Mints</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Token</th><th>Mint Address</th><th>Decimals</th></tr>
+</thead>
+<tbody>
+<tr><td>USDC</td><td><code>EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v</code></td><td>6</td></tr>
+<tr><td>USDT</td><td><code>Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB</code></td><td>6</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="faucet"><a class="header" href="#faucet">Faucet</a></h2>
+<pre><code class="language-bash">solana airdrop 2 YOUR_ADDRESS --url https://api.devnet.solana.com
+</code></pre>
+<h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
+<ul>
+<li><a href="https://docs.solana.com">Solana Docs</a></li>
+<li><a href="https://explorer.solana.com">Solana Explorer</a></li>
+<li><a href="https://solanacookbook.com">Solana Cookbook</a></li>
+</ul>
 
                     </main>
 
@@ -203,7 +289,7 @@ let balance = get_balance(&amp;address).await?;
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../chains/icp.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../chains/base.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -217,7 +303,7 @@ let balance = get_balance(&amp;address).await?;
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../chains/icp.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../chains/base.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

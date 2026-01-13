@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Prasaga Avio - WalletD Developer Documentation</title>
+        <title>Payment Gateway - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -177,38 +177,379 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="prasaga-avio"><a class="header" href="#prasaga-avio">Prasaga Avio</a></h1>
-<p>Prasaga Avio DAG-based blockchain support.</p>
-<h2 id="features"><a class="header" href="#features">Features</a></h2>
+                        <h1 id="recipe-payment-gateway"><a class="header" href="#recipe-payment-gateway">Recipe: Payment Gateway</a></h1>
+<blockquote>
+<p><strong>Build a multi-chain payment system in 2 hours.</strong></p>
+</blockquote>
+<hr>
+<h2 id="what-youll-build"><a class="header" href="#what-youll-build">What You’ll Build</a></h2>
+<p>A payment gateway that:</p>
 <ul>
-<li>HD wallet derivation</li>
-<li>XPRT token transfers</li>
-<li>High throughput</li>
+<li>Generates unique addresses per order</li>
+<li>Monitors for incoming payments</li>
+<li>Confirms transactions automatically</li>
+<li>Supports BTC, ETH, and stablecoins</li>
 </ul>
-<h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
+<hr>
+<h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
+<pre><code>┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+│  Customer   │──────│  Your API   │──────│  WalletD    │
+│  Checkout   │      │  Server     │      │  SDK        │
+└─────────────┘      └─────────────┘      └─────────────┘
+                            │
+                            ▼
+                     ┌─────────────┐
+                     │  Database   │
+                     │  (Orders)   │
+                     └─────────────┘
+</code></pre>
+<hr>
+<h2 id="step-1-setup"><a class="header" href="#step-1-setup">Step 1: Setup</a></h2>
+<pre><code class="language-toml"># Cargo.toml
+[dependencies]
+walletd = "1.4"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+uuid = { version = "1", features = ["v4"] }
+</code></pre>
+<hr>
+<h2 id="step-2-order-model"><a class="header" href="#step-2-order-model">Step 2: Order Model</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use walletd::prasaga::{derive_address, get_balance};
+</span>use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-let address = derive_address(&amp;mnemonic, Network::Mainnet)?;
-let balance = get_balance(&amp;address).await?;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PaymentOrder {
+    pub id: String,
+    pub amount_usd: f64,
+    pub chain: String,
+    pub payment_address: String,
+    pub expected_amount: String,  // In native units
+    pub status: PaymentStatus,
+    pub created_at: u64,
+    pub paid_at: Option&lt;u64&gt;,
+    pub tx_hash: Option&lt;String&gt;,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum PaymentStatus {
+    Pending,
+    Confirming,
+    Confirmed,
+    Expired,
+}
+
+impl PaymentOrder {
+    pub fn new(amount_usd: f64, chain: &amp;str, address: &amp;str, expected: &amp;str) -&gt; Self {
+        Self {
+            id: Uuid::new_v4().to_string(),
+            amount_usd,
+            chain: chain.to_string(),
+            payment_address: address.to_string(),
+            expected_amount: expected.to_string(),
+            status: PaymentStatus::Pending,
+            created_at: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            paid_at: None,
+            tx_hash: None,
+        }
+    }
+}
 <span class="boring">}</span></code></pre>
-<h2 id="integration-status"><a class="header" href="#integration-status">Integration Status</a></h2>
+<hr>
+<h2 id="step-3-address-generation"><a class="header" href="#step-3-address-generation">Step 3: Address Generation</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::{bitcoin, ethereum};
+use walletd::types::WalletMode;
+
+pub struct PaymentGateway {
+    mnemonic: String,
+    mode: WalletMode,
+    address_index: u32,
+}
+
+impl PaymentGateway {
+    pub fn new(mnemonic: String, mode: WalletMode) -&gt; Self {
+        Self {
+            mnemonic,
+            mode,
+            address_index: 0,
+        }
+    }
+    
+    /// Generate unique address for each order
+    pub fn create_payment_address(&amp;mut self, chain: &amp;str) -&gt; Result&lt;String, String&gt; {
+        let index = self.address_index;
+        self.address_index += 1;
+        
+        match chain {
+            "BTC" =&gt; bitcoin::derive_address_at_index(&amp;self.mnemonic, self.mode, index),
+            "ETH" | "USDC" | "USDT" =&gt; ethereum::derive_address_at_index(&amp;self.mnemonic, self.mode, index),
+            _ =&gt; Err(format!("Unsupported chain: {}", chain)),
+        }
+    }
+    
+    /// Create new payment order
+    pub fn create_order(&amp;mut self, amount_usd: f64, chain: &amp;str) -&gt; Result&lt;PaymentOrder, String&gt; {
+        let address = self.create_payment_address(chain)?;
+        let expected = self.calculate_expected_amount(amount_usd, chain)?;
+        
+        Ok(PaymentOrder::new(amount_usd, chain, &amp;address, &amp;expected))
+    }
+    
+    fn calculate_expected_amount(&amp;self, usd: f64, chain: &amp;str) -&gt; Result&lt;String, String&gt; {
+        // In production, fetch real-time prices
+        let price = match chain {
+            "BTC" =&gt; 45000.0,
+            "ETH" =&gt; 2500.0,
+            "USDC" | "USDT" =&gt; 1.0,
+            _ =&gt; return Err("Unknown chain".into()),
+        };
+        
+        let amount = usd / price;
+        
+        // Convert to smallest unit
+        match chain {
+            "BTC" =&gt; Ok(format!("{}", (amount * 100_000_000.0) as u64)),
+            "ETH" =&gt; Ok(format!("{}", (amount * 1e18) as u128)),
+            "USDC" | "USDT" =&gt; Ok(format!("{}", (amount * 1_000_000.0) as u64)),
+            _ =&gt; Err("Unknown chain".into()),
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="step-4-payment-monitoring"><a class="header" href="#step-4-payment-monitoring">Step 4: Payment Monitoring</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use tokio::time::{interval, Duration};
+
+impl PaymentGateway {
+    /// Monitor pending orders for incoming payments
+    pub async fn monitor_payments(&amp;self, orders: &amp;mut Vec&lt;PaymentOrder&gt;) {
+        let mut ticker = interval(Duration::from_secs(30));
+        
+        loop {
+            ticker.tick().await;
+            
+            for order in orders.iter_mut() {
+                if order.status != PaymentStatus::Pending {
+                    continue;
+                }
+                
+                // Check for payment
+                if let Ok(Some(tx)) = self.check_payment(order).await {
+                    order.status = PaymentStatus::Confirming;
+                    order.tx_hash = Some(tx.hash.clone());
+                    println!("Payment detected for order {}: {}", order.id, tx.hash);
+                }
+                
+                // Check for confirmation
+                if order.status == PaymentStatus::Confirming {
+                    if let Ok(confirmed) = self.check_confirmation(order).await {
+                        if confirmed {
+                            order.status = PaymentStatus::Confirmed;
+                            order.paid_at = Some(
+                                std::time::SystemTime::now()
+                                    .duration_since(std::time::UNIX_EPOCH)
+                                    .unwrap()
+                                    .as_secs()
+                            );
+                            println!("Order {} confirmed!", order.id);
+                        }
+                    }
+                }
+                
+                // Check for expiry (30 minutes)
+                let age = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() - order.created_at;
+                    
+                if age &gt; 1800 &amp;&amp; order.status == PaymentStatus::Pending {
+                    order.status = PaymentStatus::Expired;
+                    println!("Order {} expired", order.id);
+                }
+            }
+        }
+    }
+    
+    async fn check_payment(&amp;self, order: &amp;PaymentOrder) -&gt; Result&lt;Option&lt;TxInfo&gt;, String&gt; {
+        let rpc = self.get_rpc(&amp;order.chain);
+        
+        let balance = match order.chain.as_str() {
+            "BTC" =&gt; bitcoin::get_balance(&amp;order.payment_address, &amp;rpc).await?,
+            "ETH" =&gt; ethereum::get_balance(&amp;order.payment_address, &amp;rpc).await?,
+            _ =&gt; return Ok(None),
+        };
+        
+        let expected: u128 = order.expected_amount.parse().unwrap_or(0);
+        let received: u128 = balance.parse().unwrap_or(0);
+        
+        // Allow 1% tolerance for price fluctuation
+        if received &gt;= (expected * 99 / 100) {
+            // Get transaction details
+            let txs = match order.chain.as_str() {
+                "BTC" =&gt; bitcoin::get_transactions(&amp;order.payment_address, &amp;rpc).await?,
+                "ETH" =&gt; ethereum::get_transactions(&amp;order.payment_address, &amp;rpc).await?,
+                _ =&gt; vec![],
+            };
+            
+            if let Some(tx) = txs.first() {
+                return Ok(Some(TxInfo {
+                    hash: tx.txid.clone(),
+                    confirmations: tx.confirmations,
+                }));
+            }
+        }
+        
+        Ok(None)
+    }
+    
+    async fn check_confirmation(&amp;self, order: &amp;PaymentOrder) -&gt; Result&lt;bool, String&gt; {
+        let rpc = self.get_rpc(&amp;order.chain);
+        let required_confirmations = match order.chain.as_str() {
+            "BTC" =&gt; 3,
+            "ETH" | "USDC" | "USDT" =&gt; 12,
+            _ =&gt; 6,
+        };
+        
+        if let Some(ref tx_hash) = order.tx_hash {
+            let confirmations = match order.chain.as_str() {
+                "BTC" =&gt; bitcoin::get_confirmations(tx_hash, &amp;rpc).await?,
+                "ETH" =&gt; ethereum::get_confirmations(tx_hash, &amp;rpc).await?,
+                _ =&gt; 0,
+            };
+            
+            return Ok(confirmations &gt;= required_confirmations);
+        }
+        
+        Ok(false)
+    }
+    
+    fn get_rpc(&amp;self, chain: &amp;str) -&gt; String {
+        match (chain, self.mode) {
+            ("BTC", WalletMode::Mainnet) =&gt; "https://blockstream.info/api".into(),
+            ("BTC", _) =&gt; "https://blockstream.info/testnet/api".into(),
+            ("ETH" | "USDC" | "USDT", WalletMode::Mainnet) =&gt; "https://eth.llamarpc.com".into(),
+            _ =&gt; "https://rpc.sepolia.org".into(),
+        }
+    }
+}
+
+struct TxInfo {
+    hash: String,
+    confirmations: u32,
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="step-5-api-endpoints"><a class="header" href="#step-5-api-endpoints">Step 5: API Endpoints</a></h2>
+<pre class="playground"><code class="language-rust">use axum::{routing::post, Json, Router};
+
+async fn create_order_handler(
+    Json(req): Json&lt;CreateOrderRequest&gt;,
+) -&gt; Json&lt;PaymentOrder&gt; {
+    let mut gateway = GATEWAY.lock().unwrap();
+    let order = gateway.create_order(req.amount_usd, &amp;req.chain).unwrap();
+    
+    // Save to database
+    save_order(&amp;order).await;
+    
+    Json(order)
+}
+
+async fn check_order_handler(
+    Json(req): Json&lt;CheckOrderRequest&gt;,
+) -&gt; Json&lt;PaymentOrder&gt; {
+    let order = get_order(&amp;req.order_id).await.unwrap();
+    Json(order)
+}
+
+#[derive(Deserialize)]
+struct CreateOrderRequest {
+    amount_usd: f64,
+    chain: String,
+}
+
+#[derive(Deserialize)]
+struct CheckOrderRequest {
+    order_id: String,
+}
+
+#[tokio::main]
+async fn main() {
+    let app = Router::new()
+        .route("/create-order", post(create_order_handler))
+        .route("/check-order", post(check_order_handler));
+    
+    // Start payment monitor in background
+    tokio::spawn(async {
+        let gateway = GATEWAY.lock().unwrap();
+        let mut orders = get_pending_orders().await;
+        gateway.monitor_payments(&amp;mut orders).await;
+    });
+    
+    axum::Server::bind(&amp;"0.0.0.0:3000".parse().unwrap())
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+}</code></pre>
+<hr>
+<h2 id="step-6-frontend-integration"><a class="header" href="#step-6-frontend-integration">Step 6: Frontend Integration</a></h2>
+<pre><code class="language-javascript">// Create payment
+const response = await fetch('/create-order', {
+    method: 'POST',
+    body: JSON.stringify({ amount_usd: 99.99, chain: 'BTC' })
+});
+const order = await response.json();
+
+// Display to customer
+document.getElementById('payment-address').textContent = order.payment_address;
+document.getElementById('amount').textContent = `${order.expected_amount} satoshis`;
+
+// Poll for confirmation
+const checkPayment = setInterval(async () =&gt; {
+    const status = await fetch('/check-order', {
+        method: 'POST',
+        body: JSON.stringify({ order_id: order.id })
+    }).then(r =&gt; r.json());
+    
+    if (status.status === 'Confirmed') {
+        clearInterval(checkPayment);
+        showSuccess();
+    }
+}, 10000);
+</code></pre>
+<hr>
+<h2 id="production-considerations"><a class="header" href="#production-considerations">Production Considerations</a></h2>
+<ol>
+<li><strong>Price Updates</strong>: Fetch real-time prices from exchange APIs</li>
+<li><strong>Address Reuse</strong>: Never reuse addresses - derive new one per order</li>
+<li><strong>Hot/Cold Wallets</strong>: Sweep payments to cold storage regularly</li>
+<li><strong>Webhooks</strong>: Notify your backend on payment confirmation</li>
+<li><strong>Refunds</strong>: Implement refund flow for overpayments</li>
+</ol>
+<hr>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
 <ul>
-<li>Phase 1: Core wallet functionality</li>
-<li>Phase 2: Transaction broadcasting</li>
-<li>Phase 3: Full SDK integration</li>
+<li>Add more chains: <a href="../chains/solana.html">Solana</a>, <a href="../chains/polygon.html">Polygon</a></li>
+<li>Implement <a href="./webhooks.html">webhooks</a></li>
+<li>Add <a href="./stablecoins.html">stablecoin support</a></li>
 </ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../chains/ton.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../chains/monero.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../sdk/types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../recipes/portfolio-tracker.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -218,11 +559,11 @@ let balance = get_balance(&amp;address).await?;
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../chains/ton.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../chains/monero.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../sdk/types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../recipes/portfolio-tracker.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

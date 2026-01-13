@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Installation - WalletD Developer Documentation</title>
+        <title>Installation - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -178,54 +178,38 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
-<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
-<ul>
-<li><strong>Rust</strong>: 1.70 or later</li>
-<li><strong>OpenSSL</strong>: Required for some chain integrations</li>
-<li><strong>pkg-config</strong>: For dependency resolution</li>
-</ul>
+<h2 id="system-requirements"><a class="header" href="#system-requirements">System Requirements</a></h2>
 <h3 id="macos"><a class="header" href="#macos">macOS</a></h3>
 <pre><code class="language-bash">brew install openssl pkg-config
 export OPENSSL_DIR=$(brew --prefix openssl)
 </code></pre>
 <h3 id="ubuntudebian"><a class="header" href="#ubuntudebian">Ubuntu/Debian</a></h3>
-<pre><code class="language-bash">sudo apt-get install libssl-dev pkg-config
+<pre><code class="language-bash">sudo apt-get install libssl-dev pkg-config build-essential
 </code></pre>
-<h2 id="library-installation"><a class="header" href="#library-installation">Library Installation</a></h2>
-<p>Add to your <code>Cargo.toml</code>:</p>
+<h3 id="windows"><a class="header" href="#windows">Windows</a></h3>
+<p>Use WSL2 with Ubuntu.</p>
+<h2 id="add-to-your-project"><a class="header" href="#add-to-your-project">Add to Your Project</a></h2>
 <pre><code class="language-toml">[dependencies]
 walletd = "1.4"
-
-# Optional: specific chain support
-walletd-bitcoin = "1.4"
-walletd-ethereum = "1.4"
-walletd-solana = "1.4"
+tokio = { version = "1", features = ["full"] }
 </code></pre>
 <h2 id="cli-installation"><a class="header" href="#cli-installation">CLI Installation</a></h2>
-<pre><code class="language-bash"># Clone repository
-git clone https://github.com/AslanPonies/walletd-v1.1
+<pre><code class="language-bash">git clone https://github.com/AslanPonies/walletd-v1.1
 cd walletd-v1.1/walletd-cli
-
-# Build release binary
 cargo build --release
-
-# Optional: Install globally
-cp target/release/walletd /usr/local/bin/
+./target/release/walletd
 </code></pre>
-<h2 id="feature-flags"><a class="header" href="#feature-flags">Feature Flags</a></h2>
-<pre><code class="language-toml">[dependencies]
-walletd = { version = "1.4", features = ["all-chains"] }
-</code></pre>
-<p>Available features:</p>
-<ul>
-<li><code>bitcoin</code> - Bitcoin support</li>
-<li><code>ethereum</code> - Ethereum + EVM chains</li>
-<li><code>solana</code> - Solana support</li>
-<li><code>all-chains</code> - All 19 chains (default)</li>
-<li><code>hardware</code> - Ledger/Trezor support</li>
-<li><code>multisig</code> - Multi-signature wallets</li>
-<li><code>staking</code> - Staking functionality</li>
-</ul>
+<h2 id="verify-installation"><a class="header" href="#verify-installation">Verify Installation</a></h2>
+<pre class="playground"><code class="language-rust">fn main() {
+    let addr = walletd::bitcoin::derive_address(
+        "abandon abandon abandon abandon abandon abandon \
+         abandon abandon abandon abandon abandon about",
+        walletd::types::WalletMode::Testnet
+    ).unwrap();
+    
+    assert!(addr.starts_with("tb1q"));
+    println!("✅ WalletD installed successfully!");
+}</code></pre>
 
                     </main>
 

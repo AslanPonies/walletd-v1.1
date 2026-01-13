@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Bitcoin - WalletD Developer Documentation</title>
+        <title>Bitcoin (Deep Dive) - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -177,37 +177,735 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="bitcoin"><a class="header" href="#bitcoin">Bitcoin</a></h1>
-<p>WalletD provides comprehensive Bitcoin support including SegWit, Taproot, and multi-signature wallets.</p>
-<h2 id="features"><a class="header" href="#features">Features</a></h2>
-<ul>
-<li>BIP-32/39/44 HD wallets</li>
-<li>SegWit (P2WPKH, P2WSH)</li>
-<li>Taproot (P2TR)</li>
-<li>Multi-signature (P2SH, P2WSH)</li>
-</ul>
+                        <h1 id="bitcoin-deep-dive"><a class="header" href="#bitcoin-deep-dive">Bitcoin Deep Dive</a></h1>
+<blockquote>
+<p><strong>The complete guide to Bitcoin in WalletD</strong> — From basics to production-ready code.</p>
+</blockquote>
+<hr>
+<h2 id="table-of-contents"><a class="header" href="#table-of-contents">Table of Contents</a></h2>
+<ol>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#address-types-explained">Address Types Explained</a></li>
+<li><a href="#complete-api-reference">Complete API Reference</a></li>
+<li><a href="#transaction-building">Transaction Building</a></li>
+<li><a href="#fee-estimation">Fee Estimation</a></li>
+<li><a href="#utxo-management">UTXO Management</a></li>
+<li><a href="#replace-by-fee-rbf">Replace-By-Fee (RBF)</a></li>
+<li><a href="#multi-signature-wallets">Multi-Signature Wallets</a></li>
+<li><a href="#watch-only-wallets">Watch-Only Wallets</a></li>
+<li><a href="#testnet-development">Testnet Development</a></li>
+<li><a href="#production-checklist">Production Checklist</a></li>
+<li><a href="#common-patterns">Common Patterns</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ol>
+<hr>
 <h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use walletd::bitcoin::{derive_address, get_balance};
+<pre class="playground"><code class="language-rust">use walletd::bitcoin::{derive_address, get_balance, send_transaction, get_transactions};
+use walletd::types::WalletMode;
 
-let address = derive_address(&amp;mnemonic, Network::Mainnet)?;
-let balance = get_balance(&amp;address).await?;
-<span class="boring">}</span></code></pre>
-<h2 id="address-types"><a class="header" href="#address-types">Address Types</a></h2>
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let mnemonic = "your 24 word mnemonic phrase here";
+    
+    // 1. Derive a SegWit address
+    let address = derive_address(mnemonic, WalletMode::Mainnet)?;
+    println!("Address: {}", address);  // bc1q...
+    
+    // 2. Check balance
+    let balance = get_balance(&amp;address, "https://blockstream.info/api").await?;
+    println!("Balance: {} sats", balance);
+    
+    // 3. Get transaction history
+    let txs = get_transactions(&amp;address, "https://blockstream.info/api").await?;
+    for tx in txs {
+        println!("{}: {} sats", tx.txid, tx.amount);
+    }
+    
+    Ok(())
+}</code></pre>
+<hr>
+<h2 id="address-types-explained"><a class="header" href="#address-types-explained">Address Types Explained</a></h2>
+<p>Bitcoin has evolved through multiple address formats. <strong>WalletD defaults to Native SegWit (bc1q) for optimal fees.</strong></p>
+<h3 id="comparison-table"><a class="header" href="#comparison-table">Comparison Table</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Type</th><th>Prefix</th><th>Description</th></tr>
+<tr><th>Type</th><th>Prefix</th><th>Example</th><th>Avg Fee</th><th>Use Case</th></tr>
 </thead>
 <tbody>
-<tr><td>P2PKH</td><td>1…</td><td>Legacy</td></tr>
-<tr><td>P2SH</td><td>3…</td><td>Script Hash</td></tr>
-<tr><td>P2WPKH</td><td>bc1q…</td><td>Native SegWit</td></tr>
-<tr><td>P2TR</td><td>bc1p…</td><td>Taproot</td></tr>
+<tr><td><strong>Legacy (P2PKH)</strong></td><td><code>1</code></td><td><code>1BvBMSEYstWetq...</code></td><td>High</td><td>Compatibility</td></tr>
+<tr><td><strong>Script (P2SH)</strong></td><td><code>3</code></td><td><code>3J98t1WpEZ73CN...</code></td><td>Medium</td><td>Multisig, wrapped SegWit</td></tr>
+<tr><td><strong>Native SegWit (P2WPKH)</strong></td><td><code>bc1q</code></td><td><code>bc1qar0srrr7xfk...</code></td><td><strong>Low</strong> ✓</td><td><strong>Recommended</strong></td></tr>
+<tr><td><strong>Taproot (P2TR)</strong></td><td><code>bc1p</code></td><td><code>bc1pmzfrwwndsqm...</code></td><td>Lowest</td><td>Privacy, complex scripts</td></tr>
 </tbody>
 </table>
 </div>
+<h3 id="why-segwit"><a class="header" href="#why-segwit">Why SegWit?</a></h3>
+<pre><code>Legacy transaction:    ~226 bytes → ~22,600 sats fee @ 100 sat/vB
+SegWit transaction:    ~141 vbytes → ~14,100 sats fee @ 100 sat/vB
+                                     ─────────────────
+                                     37% fee savings
+</code></pre>
+<h3 id="derivation-paths"><a class="header" href="#derivation-paths">Derivation Paths</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Standard</th><th>Path</th><th>Address Type</th><th>When to Use</th></tr>
+</thead>
+<tbody>
+<tr><td>BIP-44</td><td><code>m/44'/0'/0'/0/0</code></td><td>Legacy (1…)</td><td>Exchange compatibility</td></tr>
+<tr><td>BIP-49</td><td><code>m/49'/0'/0'/0/0</code></td><td>Wrapped SegWit (3…)</td><td>Legacy system support</td></tr>
+<tr><td><strong>BIP-84</strong></td><td><code>m/84'/0'/0'/0/0</code></td><td><strong>Native SegWit (bc1q…)</strong></td><td><strong>Default - use this</strong></td></tr>
+<tr><td>BIP-86</td><td><code>m/86'/0'/0'/0/0</code></td><td>Taproot (bc1p…)</td><td>Advanced privacy</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="testnet-prefixes"><a class="header" href="#testnet-prefixes">Testnet Prefixes</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Type</th><th>Mainnet</th><th>Testnet</th></tr>
+</thead>
+<tbody>
+<tr><td>Legacy</td><td><code>1</code></td><td><code>m</code> or <code>n</code></td></tr>
+<tr><td>Script</td><td><code>3</code></td><td><code>2</code></td></tr>
+<tr><td>SegWit</td><td><code>bc1q</code></td><td><code>tb1q</code></td></tr>
+<tr><td>Taproot</td><td><code>bc1p</code></td><td><code>tb1p</code></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="complete-api-reference"><a class="header" href="#complete-api-reference">Complete API Reference</a></h2>
+<h3 id="derive_address"><a class="header" href="#derive_address">derive_address</a></h3>
+<p>Derives a Bitcoin address from a BIP-39 mnemonic.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn derive_address(mnemonic: &amp;str, mode: WalletMode) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Parameters:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mnemonic</code></td><td><code>&amp;str</code></td><td>BIP-39 mnemonic (12 or 24 words)</td></tr>
+<tr><td><code>mode</code></td><td><code>WalletMode</code></td><td><code>Mainnet</code>, <code>Testnet</code>, or <code>Demo</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Returns:</strong> Native SegWit address (<code>bc1q...</code> or <code>tb1q...</code>)</p>
+<p><strong>Example:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Mainnet
+let addr = derive_address(mnemonic, WalletMode::Mainnet)?;
+assert!(addr.starts_with("bc1q"));
+
+// Testnet  
+let addr = derive_address(mnemonic, WalletMode::Testnet)?;
+assert!(addr.starts_with("tb1q"));
+
+// Derive multiple addresses (different accounts)
+for i in 0..5 {
+    let addr = derive_address_at_index(mnemonic, WalletMode::Mainnet, i)?;
+    println!("Address {}: {}", i, addr);
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Errors:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+</thead>
+<tbody>
+<tr><td><code>InvalidMnemonic</code></td><td>Wrong word count or invalid words</td><td>Check for 12/24 words, verify spelling</td></tr>
+<tr><td><code>DerivationFailed</code></td><td>Cryptographic error</td><td>Ensure mnemonic is valid BIP-39</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h3 id="get_balance"><a class="header" href="#get_balance">get_balance</a></h3>
+<p>Fetches the confirmed balance for an address.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn get_balance(address: &amp;str, rpc_url: &amp;str) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Parameters:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>address</code></td><td><code>&amp;str</code></td><td>Any valid Bitcoin address</td></tr>
+<tr><td><code>rpc_url</code></td><td><code>&amp;str</code></td><td>Esplora-compatible API endpoint</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Returns:</strong> Balance in <strong>satoshis</strong> as a string</p>
+<p><strong>RPC Endpoints:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Network</th><th>Provider</th><th>URL</th><th>Rate Limit</th></tr>
+</thead>
+<tbody>
+<tr><td>Mainnet</td><td>Blockstream</td><td><code>https://blockstream.info/api</code></td><td>None</td></tr>
+<tr><td>Mainnet</td><td>Mempool.space</td><td><code>https://mempool.space/api</code></td><td>10/sec</td></tr>
+<tr><td>Testnet</td><td>Blockstream</td><td><code>https://blockstream.info/testnet/api</code></td><td>None</td></tr>
+<tr><td>Testnet</td><td>Mempool.space</td><td><code>https://mempool.space/testnet/api</code></td><td>10/sec</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Example:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let balance_sats = get_balance(
+    "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+    "https://blockstream.info/api"
+).await?;
+
+// Convert to BTC
+let sats: u64 = balance_sats.parse()?;
+let btc = sats as f64 / 100_000_000.0;
+println!("{:.8} BTC", btc);
+<span class="boring">}</span></code></pre>
+<p><strong>Errors:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+</thead>
+<tbody>
+<tr><td><code>NetworkError</code></td><td>RPC unreachable</td><td>Check internet, try another endpoint</td></tr>
+<tr><td><code>InvalidAddress</code></td><td>Malformed address</td><td>Validate address format</td></tr>
+<tr><td><code>RpcError(404)</code></td><td>Address never used</td><td>This is valid - balance is 0</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h3 id="send_transaction"><a class="header" href="#send_transaction">send_transaction</a></h3>
+<p>Creates, signs, and broadcasts a Bitcoin transaction.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn send_transaction(
+    from_address: &amp;str,
+    to_address: &amp;str,
+    amount_sats: u64,
+    rpc_url: &amp;str,
+) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Parameters:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>from_address</code></td><td><code>&amp;str</code></td><td>Sender’s address (must have UTXOs)</td></tr>
+<tr><td><code>to_address</code></td><td><code>&amp;str</code></td><td>Recipient’s address (any format)</td></tr>
+<tr><td><code>amount_sats</code></td><td><code>u64</code></td><td>Amount in satoshis</td></tr>
+<tr><td><code>rpc_url</code></td><td><code>&amp;str</code></td><td>API endpoint</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Returns:</strong> Transaction ID (txid)</p>
+<p><strong>Example:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Send 0.001 BTC (100,000 sats)
+let txid = send_transaction(
+    "bc1qsender...",
+    "bc1qrecipient...",
+    100_000,
+    "https://blockstream.info/api"
+).await?;
+
+println!("Sent! Track at: https://mempool.space/tx/{}", txid);
+<span class="boring">}</span></code></pre>
+<p><strong>Fee Handling:</strong></p>
+<ul>
+<li>Fees are <strong>automatically estimated</strong> based on current mempool</li>
+<li>Default target: 6-block confirmation (~1 hour)</li>
+<li>For custom fees, use <code>send_transaction_with_fee()</code></li>
+</ul>
+<hr>
+<h3 id="get_transactions"><a class="header" href="#get_transactions">get_transactions</a></h3>
+<p>Retrieves transaction history for an address.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn get_transactions(
+    address: &amp;str,
+    rpc_url: &amp;str,
+) -&gt; Result&lt;Vec&lt;TransactionInfo&gt;&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Returns:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct TransactionInfo {
+    pub txid: String,           // Transaction ID
+    pub amount: i64,            // Satoshis (+received, -sent)
+    pub fee: u64,               // Fee paid (if sender)
+    pub confirmations: u32,     // 0 = unconfirmed
+    pub timestamp: u64,         // Unix timestamp
+    pub block_height: Option&lt;u64&gt;,
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Example:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let txs = get_transactions(&amp;address, &amp;rpc).await?;
+
+for tx in txs {
+    let direction = if tx.amount &gt; 0 { "↓ IN" } else { "↑ OUT" };
+    let btc = (tx.amount.abs() as f64) / 100_000_000.0;
+    println!("{} {:.8} BTC - {}", direction, btc, tx.txid);
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="transaction-building"><a class="header" href="#transaction-building">Transaction Building</a></h2>
+<h3 id="simple-send"><a class="header" href="#simple-send">Simple Send</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Send entire balance minus fee
+let balance: u64 = get_balance(&amp;from, &amp;rpc).await?.parse()?;
+let fee = estimate_fee(&amp;rpc, 1).await?;  // 1 input
+let amount = balance - fee;
+
+let txid = send_transaction(&amp;from, &amp;to, amount, &amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="multi-output-transaction"><a class="header" href="#multi-output-transaction">Multi-Output Transaction</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::build_transaction;
+
+let outputs = vec![
+    ("bc1qalice...", 50_000),   // 50k sats to Alice
+    ("bc1qbob...", 30_000),     // 30k sats to Bob
+    ("bc1qcarol...", 20_000),   // 20k sats to Carol
+];
+
+let txid = build_transaction()
+    .from(&amp;my_address)
+    .outputs(outputs)
+    .fee_rate(10)  // sat/vB
+    .broadcast(&amp;rpc)
+    .await?;
+<span class="boring">}</span></code></pre>
+<h3 id="op_return-data"><a class="header" href="#op_return-data">OP_RETURN Data</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Embed data in transaction (up to 80 bytes)
+let txid = build_transaction()
+    .from(&amp;my_address)
+    .to(&amp;recipient, 10_000)
+    .op_return(b"WalletD was here!")
+    .broadcast(&amp;rpc)
+    .await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="fee-estimation"><a class="header" href="#fee-estimation">Fee Estimation</a></h2>
+<h3 id="current-fee-rates"><a class="header" href="#current-fee-rates">Current Fee Rates</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::get_fee_estimates;
+
+let fees = get_fee_estimates("https://mempool.space/api").await?;
+
+println!("Next block:  {} sat/vB", fees.fastest);    // ~10 min
+println!("3 blocks:    {} sat/vB", fees.half_hour);  // ~30 min
+println!("6 blocks:    {} sat/vB", fees.hour);       // ~1 hour
+println!("Low priority:{} sat/vB", fees.economy);    // ~1 day
+<span class="boring">}</span></code></pre>
+<h3 id="calculate-transaction-fee"><a class="header" href="#calculate-transaction-fee">Calculate Transaction Fee</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Estimate fee for a transaction
+fn estimate_tx_fee(num_inputs: usize, num_outputs: usize, fee_rate: u64) -&gt; u64 {
+    // SegWit transaction size estimation
+    let base_size = 10;  // Version + locktime
+    let input_size = 68; // Per input (SegWit)
+    let output_size = 31; // Per P2WPKH output
+    
+    let vsize = base_size + (num_inputs * input_size) + (num_outputs * output_size);
+    (vsize as u64) * fee_rate
+}
+
+// Example: 2 inputs, 2 outputs @ 20 sat/vB
+let fee = estimate_tx_fee(2, 2, 20);
+println!("Estimated fee: {} sats", fee);  // ~3,960 sats
+<span class="boring">}</span></code></pre>
+<h3 id="fee-priority-guide"><a class="header" href="#fee-priority-guide">Fee Priority Guide</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Priority</th><th>Target</th><th>Typical Rate</th><th>When to Use</th></tr>
+</thead>
+<tbody>
+<tr><td>Urgent</td><td>Next block</td><td>50-200 sat/vB</td><td>Time-critical</td></tr>
+<tr><td>Normal</td><td>3 blocks</td><td>20-50 sat/vB</td><td>Default</td></tr>
+<tr><td>Low</td><td>6+ blocks</td><td>10-20 sat/vB</td><td>Non-urgent</td></tr>
+<tr><td>Economy</td><td>1 day</td><td>1-10 sat/vB</td><td>No rush</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="utxo-management"><a class="header" href="#utxo-management">UTXO Management</a></h2>
+<h3 id="whats-a-utxo"><a class="header" href="#whats-a-utxo">What’s a UTXO?</a></h3>
+<p>Bitcoin doesn’t have “balances” - it has Unspent Transaction Outputs (UTXOs).</p>
+<pre><code>Your "balance" = Sum of all UTXOs you control
+
+Example:
+  UTXO 1: 0.5 BTC (from tx abc123)
+  UTXO 2: 0.3 BTC (from tx def456)
+  UTXO 3: 0.2 BTC (from tx ghi789)
+  ─────────────────────────────────
+  Balance: 1.0 BTC
+</code></pre>
+<h3 id="list-utxos"><a class="header" href="#list-utxos">List UTXOs</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::get_utxos;
+
+let utxos = get_utxos(&amp;address, &amp;rpc).await?;
+
+for utxo in &amp;utxos {
+    println!("{}:{} - {} sats", 
+        utxo.txid, 
+        utxo.vout, 
+        utxo.value
+    );
+}
+<span class="boring">}</span></code></pre>
+<h3 id="utxo-consolidation"><a class="header" href="#utxo-consolidation">UTXO Consolidation</a></h3>
+<p>Consolidate many small UTXOs when fees are low:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Check if consolidation makes sense
+let utxos = get_utxos(&amp;address, &amp;rpc).await?;
+let fees = get_fee_estimates(&amp;rpc).await?;
+
+if fees.economy &lt; 5 &amp;&amp; utxos.len() &gt; 10 {
+    println!("Good time to consolidate {} UTXOs", utxos.len());
+    
+    let txid = consolidate_utxos(&amp;address, &amp;rpc).await?;
+    println!("Consolidated to single UTXO: {}", txid);
+}
+<span class="boring">}</span></code></pre>
+<h3 id="dust-threshold"><a class="header" href="#dust-threshold">Dust Threshold</a></h3>
+<p>UTXOs below ~546 sats are considered “dust” and may not be spendable economically:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>const DUST_THRESHOLD: u64 = 546;
+
+let utxos = get_utxos(&amp;address, &amp;rpc).await?;
+let dust_utxos: Vec&lt;_&gt; = utxos.iter()
+    .filter(|u| u.value &lt; DUST_THRESHOLD)
+    .collect();
+
+if !dust_utxos.is_empty() {
+    println!("Warning: {} dust UTXOs ({} sats total)",
+        dust_utxos.len(),
+        dust_utxos.iter().map(|u| u.value).sum::&lt;u64&gt;()
+    );
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="replace-by-fee-rbf"><a class="header" href="#replace-by-fee-rbf">Replace-By-Fee (RBF)</a></h2>
+<p>Speed up stuck transactions by replacing them with higher fees.</p>
+<h3 id="enable-rbf"><a class="header" href="#enable-rbf">Enable RBF</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let txid = build_transaction()
+    .from(&amp;address)
+    .to(&amp;recipient, amount)
+    .rbf(true)  // Enable replacement
+    .broadcast(&amp;rpc)
+    .await?;
+<span class="boring">}</span></code></pre>
+<h3 id="bump-fee"><a class="header" href="#bump-fee">Bump Fee</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::bump_fee;
+
+// Original transaction stuck in mempool
+let original_txid = "abc123...";
+
+// Bump fee to 50 sat/vB
+let new_txid = bump_fee(original_txid, 50, &amp;rpc).await?;
+println!("Replaced {} with {}", original_txid, new_txid);
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="multi-signature-wallets"><a class="header" href="#multi-signature-wallets">Multi-Signature Wallets</a></h2>
+<h3 id="create-2-of-3-multisig"><a class="header" href="#create-2-of-3-multisig">Create 2-of-3 Multisig</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::multisig::{MultisigConfig, create_multisig_address};
+
+// Three participants
+let pubkeys = vec![
+    "02abc...",  // Alice
+    "02def...",  // Bob  
+    "02ghi...",  // Carol
+];
+
+// 2 of 3 required to spend
+let config = MultisigConfig {
+    threshold: 2,
+    pubkeys: pubkeys,
+};
+
+let address = create_multisig_address(&amp;config, WalletMode::Mainnet)?;
+println!("Multisig address: {}", address);  // bc1q... (P2WSH)
+<span class="boring">}</span></code></pre>
+<h3 id="sign-multisig-transaction"><a class="header" href="#sign-multisig-transaction">Sign Multisig Transaction</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::multisig::{create_multisig_tx, add_signature};
+
+// Step 1: Create unsigned transaction
+let mut tx = create_multisig_tx(&amp;config, &amp;to, amount)?;
+println!("Share this with signers: {}", tx.to_hex());
+
+// Step 2: Alice signs
+let alice_sig = alice_wallet.sign(&amp;tx)?;
+add_signature(&amp;mut tx, &amp;alice_sig, 0)?;
+
+// Step 3: Bob signs  
+let bob_sig = bob_wallet.sign(&amp;tx)?;
+add_signature(&amp;mut tx, &amp;bob_sig, 1)?;
+
+// Step 4: Threshold met - broadcast
+assert!(tx.is_complete());  // 2 of 3 signed
+let txid = broadcast(&amp;tx, &amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="watch-only-wallets"><a class="header" href="#watch-only-wallets">Watch-Only Wallets</a></h2>
+<p>Monitor addresses without private keys:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::watch_only::WatchOnlyWallet;
+
+// Create watch-only wallet from xpub
+let xpub = "xpub6CUG...";
+let wallet = WatchOnlyWallet::from_xpub(xpub)?;
+
+// Generate receiving addresses
+for i in 0..5 {
+    let addr = wallet.get_address(i)?;
+    println!("Address {}: {}", i, addr);
+}
+
+// Monitor for incoming transactions
+let balance = wallet.get_total_balance(&amp;rpc).await?;
+let txs = wallet.get_all_transactions(&amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="testnet-development"><a class="header" href="#testnet-development">Testnet Development</a></h2>
+<h3 id="1-get-testnet-coins"><a class="header" href="#1-get-testnet-coins">1. Get Testnet Coins</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Faucet</th><th>URL</th><th>Amount</th></tr>
+</thead>
+<tbody>
+<tr><td>Coinfaucet</td><td><a href="https://coinfaucet.eu/en/btc-testnet/">coinfaucet.eu/btc-testnet</a></td><td>0.01 tBTC</td></tr>
+<tr><td>Bitcoin Testnet</td><td><a href="https://bitcoinfaucet.uo1.net/">bitcoinfaucet.uo1.net</a></td><td>0.001 tBTC</td></tr>
+<tr><td>Mempool</td><td><a href="https://mempool.space/testnet/faucet">mempool.space/testnet/faucet</a></td><td>0.01 tBTC</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="2-use-testnet-mode"><a class="header" href="#2-use-testnet-mode">2. Use Testnet Mode</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// All functions work the same, just change the mode
+let address = derive_address(mnemonic, WalletMode::Testnet)?;
+assert!(address.starts_with("tb1q"));
+
+let balance = get_balance(&amp;address, "https://blockstream.info/testnet/api").await?;
+<span class="boring">}</span></code></pre>
+<h3 id="3-testnet-block-explorers"><a class="header" href="#3-testnet-block-explorers">3. Testnet Block Explorers</a></h3>
+<ul>
+<li><a href="https://mempool.space/testnet">mempool.space/testnet</a></li>
+<li><a href="https://blockstream.info/testnet">blockstream.info/testnet</a></li>
+</ul>
+<hr>
+<h2 id="production-checklist"><a class="header" href="#production-checklist">Production Checklist</a></h2>
+<p>Before going live:</p>
+<ul>
+<li><input disabled="" type="checkbox"> <strong>Key Security</strong>: Mnemonic stored securely (HSM, hardware wallet, or encrypted)</li>
+<li><input disabled="" type="checkbox"> <strong>Address Validation</strong>: Validate all addresses before sending</li>
+<li><input disabled="" type="checkbox"> <strong>Amount Validation</strong>: Check for overflow, dust, and sufficient balance</li>
+<li><input disabled="" type="checkbox"> <strong>Fee Estimation</strong>: Use real-time fee estimates, not hardcoded values</li>
+<li><input disabled="" type="checkbox"> <strong>Error Handling</strong>: Handle all error cases gracefully</li>
+<li><input disabled="" type="checkbox"> <strong>Rate Limiting</strong>: Respect RPC provider limits</li>
+<li><input disabled="" type="checkbox"> <strong>Monitoring</strong>: Log all transactions for audit trail</li>
+<li><input disabled="" type="checkbox"> <strong>Backup</strong>: Test wallet recovery from mnemonic</li>
+<li><input disabled="" type="checkbox"> <strong>Testing</strong>: Full test coverage on testnet first</li>
+</ul>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Production-ready send function
+async fn safe_send(
+    from: &amp;str,
+    to: &amp;str, 
+    amount: u64,
+    rpc: &amp;str,
+) -&gt; Result&lt;String, WalletError&gt; {
+    // 1. Validate addresses
+    if !is_valid_address(from) || !is_valid_address(to) {
+        return Err(WalletError::InvalidAddress);
+    }
+    
+    // 2. Check balance
+    let balance: u64 = get_balance(from, rpc).await?.parse()?;
+    let fee = estimate_fee(rpc, 1, 2).await?;
+    
+    if amount + fee &gt; balance {
+        return Err(WalletError::InsufficientFunds);
+    }
+    
+    // 3. Check dust
+    if amount &lt; 546 {
+        return Err(WalletError::DustAmount);
+    }
+    
+    // 4. Send with logging
+    let txid = send_transaction(from, to, amount, rpc).await?;
+    log::info!("Sent {} sats from {} to {}: {}", amount, from, to, txid);
+    
+    Ok(txid)
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="common-patterns"><a class="header" href="#common-patterns">Common Patterns</a></h2>
+<h3 id="convert-satoshis--btc"><a class="header" href="#convert-satoshis--btc">Convert Satoshis ↔ BTC</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>const SATS_PER_BTC: f64 = 100_000_000.0;
+
+fn sats_to_btc(sats: u64) -&gt; f64 {
+    sats as f64 / SATS_PER_BTC
+}
+
+fn btc_to_sats(btc: f64) -&gt; u64 {
+    (btc * SATS_PER_BTC) as u64
+}
+
+// Format for display
+fn format_btc(sats: u64) -&gt; String {
+    format!("{:.8} BTC", sats_to_btc(sats))
+}
+<span class="boring">}</span></code></pre>
+<h3 id="validate-address"><a class="header" href="#validate-address">Validate Address</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn is_valid_bitcoin_address(address: &amp;str, network: WalletMode) -&gt; bool {
+    match network {
+        WalletMode::Mainnet =&gt; {
+            address.starts_with("bc1q") ||  // SegWit
+            address.starts_with("bc1p") ||  // Taproot
+            address.starts_with("1") ||     // Legacy
+            address.starts_with("3")        // Script
+        }
+        WalletMode::Testnet =&gt; {
+            address.starts_with("tb1q") ||
+            address.starts_with("tb1p") ||
+            address.starts_with("m") ||
+            address.starts_with("n") ||
+            address.starts_with("2")
+        }
+        WalletMode::Demo =&gt; true,
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="wait-for-confirmation"><a class="header" href="#wait-for-confirmation">Wait for Confirmation</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use tokio::time::{sleep, Duration};
+
+async fn wait_for_confirmation(
+    txid: &amp;str,
+    rpc: &amp;str,
+    target_confirmations: u32,
+) -&gt; Result&lt;u32, WalletError&gt; {
+    loop {
+        let status = get_transaction_status(txid, rpc).await?;
+        
+        if status.confirmations &gt;= target_confirmations {
+            return Ok(status.confirmations);
+        }
+        
+        println!("Waiting... {} confirmations", status.confirmations);
+        sleep(Duration::from_secs(30)).await;
+    }
+}
+
+// Usage
+let confs = wait_for_confirmation(&amp;txid, &amp;rpc, 6).await?;
+println!("Transaction confirmed with {} confirmations", confs);
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h2>
+<h3 id="insufficient-funds-but-i-have-balance"><a class="header" href="#insufficient-funds-but-i-have-balance">“Insufficient funds” but I have balance</a></h3>
+<p><strong>Cause</strong>: Balance exists but UTXOs are too small after fees.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Check if you can actually spend
+let balance: u64 = get_balance(&amp;addr, &amp;rpc).await?.parse()?;
+let fee = estimate_fee(&amp;rpc, 1, 2).await?;
+let dust = 546;
+
+let spendable = balance.saturating_sub(fee + dust);
+println!("Spendable: {} sats", spendable);
+<span class="boring">}</span></code></pre>
+<h3 id="transaction-stuck-in-mempool"><a class="header" href="#transaction-stuck-in-mempool">Transaction stuck in mempool</a></h3>
+<p><strong>Cause</strong>: Fee too low for current mempool conditions.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Option 1: Wait it out (may take days)
+// Option 2: RBF bump fee
+let new_txid = bump_fee(&amp;old_txid, higher_fee_rate, &amp;rpc).await?;
+
+// Option 3: CPFP (Child Pays For Parent)
+// Spend the unconfirmed output with a high fee
+<span class="boring">}</span></code></pre>
+<h3 id="invalid-address-error"><a class="header" href="#invalid-address-error">Invalid address error</a></h3>
+<p><strong>Cause</strong>: Address format doesn’t match network.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Common mistake: Using mainnet address on testnet
+let addr = derive_address(mnemonic, WalletMode::Mainnet)?;
+// ❌ This will fail:
+get_balance(&amp;addr, "https://blockstream.info/testnet/api").await?;
+
+// ✅ Fix: Match address to network
+let addr = derive_address(mnemonic, WalletMode::Testnet)?;
+get_balance(&amp;addr, "https://blockstream.info/testnet/api").await?;
+<span class="boring">}</span></code></pre>
+<h3 id="rate-limited-by-rpc"><a class="header" href="#rate-limited-by-rpc">Rate limited by RPC</a></h3>
+<p><strong>Cause</strong>: Too many requests.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Add delays between requests
+for addr in addresses {
+    let balance = get_balance(&amp;addr, &amp;rpc).await?;
+    tokio::time::sleep(Duration::from_millis(100)).await;
+}
+
+// Or use a dedicated RPC provider
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
+<ul>
+<li><a href="https://developer.bitcoin.org/devguide/">Bitcoin Developer Guide</a></li>
+<li><a href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki">BIP-32 HD Wallets</a></li>
+<li><a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP-39 Mnemonic</a></li>
+<li><a href="https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki">BIP-84 SegWit</a></li>
+<li><a href="https://mempool.space">Mempool.space</a> - Best block explorer</li>
+<li><a href="https://github.com/Blockstream/esplora/blob/master/API.md">Blockstream Esplora API</a></li>
+</ul>
 
                     </main>
 

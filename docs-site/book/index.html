@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - WalletD Developer Documentation</title>
+        <title>Introduction - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-22dc3a90.js"></script>
+        <script src="toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="print.html" title="Print this book" aria-label="Print this book">
@@ -177,75 +177,218 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="walletd-developer-documentation"><a class="header" href="#walletd-developer-documentation">WalletD Developer Documentation</a></h1>
-<p>WalletD is a <strong>multi-chain cryptocurrency wallet SDK</strong> built in Rust, supporting <strong>19 blockchains</strong> with a unified API.</p>
-<h2 id="supported-chains"><a class="header" href="#supported-chains">Supported Chains</a></h2>
+                        <h1 id="walletd"><a class="header" href="#walletd">WalletD</a></h1>
+<blockquote>
+<p><strong>The Multi-Chain Wallet SDK</strong> — Ship crypto features in hours, not months.</p>
+</blockquote>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 3 lines to check a Bitcoin balance
+let address = walletd::bitcoin::derive_address(mnemonic, WalletMode::Mainnet)?;
+let balance = walletd::bitcoin::get_balance(&amp;address, BLOCKSTREAM_API).await?;
+println!("Balance: {} BTC", sats_to_btc(balance.parse()?));
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="why-walletd"><a class="header" href="#why-walletd">Why WalletD?</a></h2>
+<p><strong>The problem</strong>: Building a multi-chain wallet means learning 18 different SDKs, APIs, address formats, and transaction structures.</p>
+<p><strong>The solution</strong>: One unified API across all chains.</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Chain</th><th>Mainnet</th><th>Testnet</th><th>HD Wallet</th><th>Transactions</th></tr>
+<tr><th>Without WalletD</th><th>With WalletD</th></tr>
 </thead>
 <tbody>
-<tr><td>Bitcoin</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Ethereum</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Solana</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>ICP</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Hedera</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Monero</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Base</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Polygon</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Avalanche</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Arbitrum</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Cardano</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Polkadot</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Cosmos</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>NEAR</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Tron</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Sui</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Aptos</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>TON</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Prasaga Avio</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td>Learn 18 different libraries</td><td>Learn 1 API</td></tr>
+<tr><td>Handle 18 error formats</td><td>Unified error handling</td></tr>
+<tr><td>18 different key derivation methods</td><td>One <code>derive_address()</code> call</td></tr>
+<tr><td>Weeks of integration work</td><td>Hours to production</td></tr>
 </tbody>
 </table>
 </div>
-<h2 id="quick-install"><a class="header" href="#quick-install">Quick Install</a></h2>
-<pre><code class="language-bash"># Add to Cargo.toml
+<hr>
+<h2 id="60-second-quickstart"><a class="header" href="#60-second-quickstart">60-Second Quickstart</a></h2>
+<p><strong>Goal</strong>: See your first balance in under 60 seconds.</p>
+<h3 id="step-1-add-dependency-10-sec"><a class="header" href="#step-1-add-dependency-10-sec">Step 1: Add dependency (10 sec)</a></h3>
+<pre><code class="language-toml"># Cargo.toml
 [dependencies]
 walletd = "1.4"
+tokio = { version = "1", features = ["full"] }
 </code></pre>
-<h2 id="quick-example"><a class="header" href="#quick-example">Quick Example</a></h2>
-<pre class="playground"><code class="language-rust">use walletd::prelude::*;
+<h3 id="step-2-run-this-code-50-sec"><a class="header" href="#step-2-run-this-code-50-sec">Step 2: Run this code (50 sec)</a></h3>
+<pre class="playground"><code class="language-rust">use walletd::{bitcoin, ethereum, solana};
+use walletd::types::WalletMode;
 
-fn main() -&gt; Result&lt;()&gt; {
-    // Generate a new wallet
-    let mnemonic = Mnemonic::generate(24)?;
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    // Test mnemonic - NEVER use for real funds
+    let mnemonic = "abandon abandon abandon abandon abandon abandon \
+                    abandon abandon abandon abandon abandon about";
     
-    // Derive Bitcoin address
-    let btc_address = walletd::bitcoin::derive_address(&amp;mnemonic, Network::Mainnet)?;
+    // Derive addresses (same mnemonic, different chains)
+    let btc = bitcoin::derive_address(mnemonic, WalletMode::Mainnet)?;
+    let eth = ethereum::derive_address(mnemonic, WalletMode::Mainnet)?;
+    let sol = solana::derive_address(mnemonic, WalletMode::Mainnet)?;
     
-    // Derive Ethereum address  
-    let eth_address = walletd::ethereum::derive_address(&amp;mnemonic, Network::Mainnet)?;
+    println!("Bitcoin:  {}", btc);
+    println!("Ethereum: {}", eth);
+    println!("Solana:   {}", sol);
     
-    println!("BTC: {}", btc_address);
-    println!("ETH: {}", eth_address);
+    // Check a real balance (this address has funds)
+    let balance = bitcoin::get_balance(
+        "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+        "https://blockstream.info/api"
+    ).await?;
+    
+    println!("\nBalance: {} satoshis", balance);
     
     Ok(())
 }</code></pre>
-<h2 id="features"><a class="header" href="#features">Features</a></h2>
+<p><strong>Expected output:</strong></p>
+<pre><code>Bitcoin:  bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu
+Ethereum: 0x9858EfFD232B4033E47d90003D41EC34EcaEda94
+Solana:   5K4RmBDJhqJsT4xMz1gKqeqmGLnPE5aDfEnCgfVWuujD
+
+Balance: 1234567 satoshis
+</code></pre>
+<p>🎉 <strong>You just queried Bitcoin in 3 lines of code.</strong></p>
+<hr>
+<h2 id="supported-chains-18"><a class="header" href="#supported-chains-18">Supported Chains (18)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Chain</th><th>Type</th><th>Status</th><th>Guide</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Bitcoin</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/bitcoin.html">Deep Dive →</a></td></tr>
+<tr><td><strong>Ethereum</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/ethereum.html">Deep Dive →</a></td></tr>
+<tr><td><strong>Solana</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/solana.html">Guide →</a></td></tr>
+<tr><td><strong>Base</strong></td><td>L2</td><td>✅ Full</td><td><a href="./chains/base.html">Guide →</a></td></tr>
+<tr><td><strong>Polygon</strong></td><td>L2</td><td>✅ Full</td><td><a href="./chains/polygon.html">Guide →</a></td></tr>
+<tr><td><strong>Arbitrum</strong></td><td>L2</td><td>✅ Full</td><td><a href="./chains/arbitrum.html">Guide →</a></td></tr>
+<tr><td><strong>Avalanche</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/avalanche.html">Guide →</a></td></tr>
+<tr><td><strong>Cardano</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/cardano.html">Guide →</a></td></tr>
+<tr><td><strong>Polkadot</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/polkadot.html">Guide →</a></td></tr>
+<tr><td><strong>Cosmos</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/cosmos.html">Guide →</a></td></tr>
+<tr><td><strong>ICP</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/icp.html">Guide →</a></td></tr>
+<tr><td><strong>Hedera</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/hedera.html">Guide →</a></td></tr>
+<tr><td><strong>Monero</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/monero.html">Guide →</a></td></tr>
+<tr><td><strong>NEAR</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/near.html">Guide →</a></td></tr>
+<tr><td><strong>Tron</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/tron.html">Guide →</a></td></tr>
+<tr><td><strong>Sui</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/sui.html">Guide →</a></td></tr>
+<tr><td><strong>Aptos</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/aptos.html">Guide →</a></td></tr>
+<tr><td><strong>TON</strong></td><td>L1</td><td>✅ Full</td><td><a href="./chains/ton.html">Guide →</a></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="what-can-you-build"><a class="header" href="#what-can-you-build">What Can You Build?</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Recipe</th><th>Time</th><th>Difficulty</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="./recipes/payment-gateway.html">💰 Payment Gateway</a></td><td>2 hours</td><td>Beginner</td></tr>
+<tr><td><a href="./recipes/portfolio-tracker.html">📊 Portfolio Tracker</a></td><td>3 hours</td><td>Beginner</td></tr>
+<tr><td><a href="./recipes/multisig-treasury.html">🔐 Multisig Treasury</a></td><td>4 hours</td><td>Intermediate</td></tr>
+<tr><td><a href="./recipes/staking-dashboard.html">📈 Staking Dashboard</a></td><td>3 hours</td><td>Intermediate</td></tr>
+<tr><td><a href="./recipes/exchange-integration.html">🏦 Exchange Integration</a></td><td>6 hours</td><td>Advanced</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                        YOUR APPLICATION                          │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                    ┌───────────┴───────────┐
+                    ▼                       ▼
+         ┌─────────────────┐     ┌─────────────────┐
+         │   WalletD SDK   │     │   WalletD CLI   │
+         │   (Library)     │     │   (Standalone)  │
+         └─────────────────┘     └─────────────────┘
+                    │
+    ┌───────────────┼───────────────┬───────────────┐
+    ▼               ▼               ▼               ▼
+┌───────┐     ┌──────────┐    ┌──────────┐    ┌──────────┐
+│ Wallet│     │ Broadcast│    │ Hardware │    │ Staking  │
+│ Core  │     │ Engine   │    │ Wallets  │    │ Module   │
+└───────┘     └──────────┘    └──────────┘    └──────────┘
+    │               │               │               │
+    └───────────────┴───────────────┴───────────────┘
+                                │
+    ┌─────────┬─────────┬───────┴───┬─────────┬─────────┐
+    ▼         ▼         ▼           ▼         ▼         ▼
+┌──────┐ ┌──────┐ ┌──────┐    ┌──────┐ ┌──────┐ ┌──────┐
+│ BTC  │ │ ETH  │ │ SOL  │    │ DOT  │ │ ATOM │ │ ...  │
+│ RPC  │ │ RPC  │ │ RPC  │    │ RPC  │ │ RPC  │ │      │
+└──────┘ └──────┘ └──────┘    └──────┘ └──────┘ └──────┘
+</code></pre>
+<hr>
+<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
+<h3 id="library-for-rust-projects"><a class="header" href="#library-for-rust-projects">Library (for Rust projects)</a></h3>
+<pre><code class="language-toml">[dependencies]
+walletd = "1.4"
+tokio = { version = "1", features = ["full"] }
+</code></pre>
+<h3 id="cli-standalone-tool"><a class="header" href="#cli-standalone-tool">CLI (standalone tool)</a></h3>
+<pre><code class="language-bash">git clone https://github.com/AslanPonies/walletd-v1.1
+cd walletd-v1.1/walletd-cli
+cargo build --release
+./target/release/walletd
+</code></pre>
+<h3 id="system-requirements"><a class="header" href="#system-requirements">System Requirements</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Platform</th><th>Requirements</th></tr>
+</thead>
+<tbody>
+<tr><td>macOS</td><td><code>brew install openssl</code></td></tr>
+<tr><td>Ubuntu</td><td><code>apt install libssl-dev pkg-config</code></td></tr>
+<tr><td>Windows</td><td>Use WSL2</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="quick-links"><a class="header" href="#quick-links">Quick Links</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>I want to…</th><th>Go to…</th></tr>
+</thead>
+<tbody>
+<tr><td>Get started immediately</td><td><a href="#60-second-quickstart">60-Second Quickstart</a></td></tr>
+<tr><td>Understand Bitcoin support</td><td><a href="./chains/bitcoin.html">Bitcoin Deep Dive</a></td></tr>
+<tr><td>Build a payment system</td><td><a href="./recipes/payment-gateway.html">Payment Gateway Recipe</a></td></tr>
+<tr><td>See all API functions</td><td><a href="./api-reference.html">API Reference</a></td></tr>
+<tr><td>Fix an error</td><td><a href="./troubleshooting.html">Troubleshooting</a></td></tr>
+<tr><td>Compare to alternatives</td><td><a href="./comparison.html">Why WalletD?</a></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="security"><a class="header" href="#security">Security</a></h2>
 <ul>
-<li><strong>HD Wallet Support</strong> - BIP-32/39/44 compliant hierarchical deterministic wallets</li>
-<li><strong>Multi-Chain</strong> - Single API for 19+ blockchains</li>
-<li><strong>Hardware Wallets</strong> - Ledger and Trezor support</li>
-<li><strong>Multi-Signature</strong> - Native multisig for supported chains</li>
-<li><strong>Staking</strong> - Built-in staking for PoS chains</li>
-<li><strong>Transaction Broadcasting</strong> - Unified transaction submission</li>
+<li>✅ BIP-32/39/44 compliant key derivation</li>
+<li>✅ No private keys stored by the SDK</li>
+<li>✅ Uses audited crypto libraries (k256, ed25519-dalek)</li>
+<li>✅ Memory-safe Rust implementation</li>
+<li>🔄 External audit in progress</li>
 </ul>
-<h2 id="links"><a class="header" href="#links">Links</a></h2>
-<ul>
-<li><a href="https://github.com/AslanPonies/walletd-v1.1">GitHub Repository</a></li>
-<li><a href="./guides/cli-usage.html">CLI Tool</a></li>
-<li><a href="./api-reference.html">API Reference</a></li>
-</ul>
+<p><strong><a href="./security.html">Read Security Guide →</a></strong></p>
+<hr>
+<h2 id="license"><a class="header" href="#license">License</a></h2>
+<p>MIT / Apache-2.0</p>
+<hr>
+<p align="center">
+  <strong>Built for developers who ship.</strong><br>
+  <a href="https://github.com/AslanPonies/walletd-v1.1">GitHub</a> •
+  <a href="./guides/quickstart.html">Documentation</a> •
+  <a href="https://github.com/AslanPonies/walletd-v1.1/issues">Issues</a>
+</p>
+
 
                     </main>
 

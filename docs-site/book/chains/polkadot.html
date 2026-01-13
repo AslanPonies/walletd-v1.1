@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Polkadot - WalletD Developer Documentation</title>
+        <title>Polkadot - WalletD Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -34,11 +34,11 @@
         <script>
             const path_to_root = "../";
             const default_light_theme = "navy";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a6336b7.js";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-22dc3a90.js"></script>
+        <script src="../toc-3f898b94.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -137,7 +137,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">WalletD Developer Documentation</h1>
+                    <h1 class="menu-title">WalletD Documentation</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -178,21 +178,93 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="polkadot"><a class="header" href="#polkadot">Polkadot</a></h1>
-<p>Polkadot relay chain support.</p>
-<h2 id="features"><a class="header" href="#features">Features</a></h2>
-<ul>
-<li>HD wallet derivation</li>
-<li>DOT transfers</li>
-<li>Staking support</li>
-</ul>
+<blockquote>
+<p><strong>Multi-chain protocol</strong> — Parachains with shared security via relay chain.</p>
+</blockquote>
 <h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use walletd::polkadot::{derive_address, get_balance};
+</span>use walletd::polkadot::{derive_address, get_balance, send_transaction};
 
-let address = derive_address(&amp;mnemonic, Network::Mainnet)?;
-let balance = get_balance(&amp;address).await?;
+let address = derive_address(mnemonic, WalletMode::Mainnet)?;
+// → "1abc..." (SS58 format)
+
+let balance = get_balance(&amp;address, "wss://rpc.polkadot.io").await?;
+// → Balance in planck
+
+let tx = send_transaction(&amp;from, &amp;to, planck_amount, &amp;rpc).await?;
 <span class="boring">}</span></code></pre>
+<h2 id="key-details"><a class="header" href="#key-details">Key Details</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Derivation Path</td><td><code>m/44'/354'/0'/0'/0'</code></td></tr>
+<tr><td>Address Format</td><td>SS58 encoding</td></tr>
+<tr><td>Native Unit</td><td>planck</td></tr>
+<tr><td>Decimals</td><td>10 (1 DOT = 10^10 planck)</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="unit-conversion"><a class="header" href="#unit-conversion">Unit Conversion</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn planck_to_dot(planck: u128) -&gt; f64 {
+    planck as f64 / 10_000_000_000.0
+}
+
+fn dot_to_planck(dot: f64) -&gt; u128 {
+    (dot * 10_000_000_000.0) as u128
+}
+<span class="boring">}</span></code></pre>
+<h2 id="ss58-address-prefixes"><a class="header" href="#ss58-address-prefixes">SS58 Address Prefixes</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Network</th><th>Prefix</th><th>Example Start</th></tr>
+</thead>
+<tbody>
+<tr><td>Polkadot</td><td>0</td><td><code>1...</code></td></tr>
+<tr><td>Kusama</td><td>2</td><td><code>C...</code>, <code>D...</code></td></tr>
+<tr><td>Generic</td><td>42</td><td><code>5...</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="staking-npos"><a class="header" href="#staking-npos">Staking (NPoS)</a></h2>
+<p>Polkadot uses Nominated Proof of Stake.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::staking::PolkadotStaking;
+
+let staking = PolkadotStaking::new(&amp;rpc);
+
+// Nominate validators
+let tx = staking.nominate(&amp;validators).await?;
+
+// Check pending rewards
+let rewards = staking.get_pending_rewards(&amp;address).await?;
+<span class="boring">}</span></code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Min Stake</td><td>~250 DOT (dynamic)</td></tr>
+<tr><td>Unbonding</td><td>28 days</td></tr>
+<tr><td>Rewards</td><td>Every era (~24h)</td></tr>
+<tr><td>APY</td><td>~12-15%</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
+<ul>
+<li><a href="https://wiki.polkadot.network">Polkadot Wiki</a></li>
+<li><a href="https://polkadot.subscan.io">Subscan</a></li>
+<li><a href="https://polkadot.js.org/apps">Polkadot.js Apps</a></li>
+</ul>
 
                     </main>
 
