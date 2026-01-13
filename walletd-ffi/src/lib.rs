@@ -1,114 +1,229 @@
-//! WalletD FFI - C/Swift/Kotlin Bindings
+//! WalletD FFI - C bindings for WalletD SDK
 //!
-//! Provides C-compatible FFI for mobile SDK integration.
+//! This module provides C-compatible functions for use from other languages.
 
-use once_cell::sync::Lazy;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
-use tokio::runtime::Runtime;
 
-static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .expect("Failed to create Tokio runtime")
-});
-
-/// Initialize the SDK
+/// Returns the version string of the WalletD SDK
+/// 
+/// # Safety
+/// This function is safe to call from C code.
 #[no_mangle]
-pub extern "C" fn walletd_init() -> i32 {
-    // Force runtime initialization
-    let _ = &*RUNTIME;
-    0 // Success
+pub extern "C" fn walletd_version() -> *mut c_char {
+    let version = env!("CARGO_PKG_VERSION");
+    CString::new(version)
+        .unwrap_or_else(|_| CString::new("unknown").unwrap())
+        .into_raw()
 }
 
-/// Generate mnemonic
+/// Returns a comma-separated list of supported chains
+/// 
+/// # Safety
+/// This function is safe to call from C code.
 #[no_mangle]
-pub extern "C" fn walletd_generate_mnemonic(word_count: u32) -> *mut c_char {
-    let words = match word_count {
-        12 => "abandon ".repeat(12),
-        24 => "abandon ".repeat(24),
-        _ => return std::ptr::null_mut(),
+pub extern "C" fn walletd_supported_chains() -> *mut c_char {
+    let chains = "bitcoin,ethereum,solana,hedera,monero,icp,base,polygon,avalanche,arbitrum,cardano,polkadot,cosmos,near,tron,sui,aptos,ton";
+    CString::new(chains)
+        .unwrap_or_else(|_| CString::new("").unwrap())
+        .into_raw()
+}
+
+/// Checks if a chain is supported
+/// 
+/// # Safety
+/// - `chain` must be a valid null-terminated C string
+/// - `chain` must point to valid memory
+#[no_mangle]
+pub unsafe extern "C" fn walletd_is_chain_supported(chain: *const c_char) -> bool {
+    if chain.is_null() {
+        return false;
+    }
+    
+    let chain_str = match CStr::from_ptr(chain).to_str() {
+        Ok(s) => s,
+        Err(_) => return false,
     };
-    CString::new(words.trim()).unwrap().into_raw()
+    
+    let supported = [
+        "bitcoin", "ethereum", "solana", "hedera", "monero", "icp",
+        "base", "polygon", "avalanche", "arbitrum", "cardano", "polkadot",
+        "cosmos", "near", "tron", "sui", "aptos", "ton",
+    ];
+    
+    supported.contains(&chain_str.to_lowercase().as_str())
 }
 
-/// Create wallet from mnemonic
+/// Creates a new wallet for the specified chain
+/// Returns a JSON string with wallet details or an error
+/// 
+/// # Safety
+/// - `chain` must be a valid null-terminated C string
+/// - `chain` must point to valid memory
 #[no_mangle]
-pub extern "C" fn walletd_create_wallet(mnemonic: *const c_char, chain: *const c_char) -> *mut c_char {
-    let mnemonic = unsafe { CStr::from_ptr(mnemonic).to_str().unwrap_or("") };
-    let chain = unsafe { CStr::from_ptr(chain).to_str().unwrap_or("bitcoin") };
+pub unsafe extern "C" fn walletd_create_wallet(chain: *const c_char) -> *mut c_char {
+    if chain.is_null() {
+        return CString::new(r#"{"error": "null chain parameter"}"#)
+            .unwrap()
+            .into_raw();
+    }
     
-    let result = serde_json::json!({
-        "success": true,
-        "chain": chain,
-        "address": format!("{}_{}_address", chain, &mnemonic[..8.min(mnemonic.len())]),
-    });
+    let chain_str = match CStr::from_ptr(chain).to_str() {
+        Ok(s) => s,
+        Err(_) => {
+            return CString::new(r#"{"error": "invalid chain string"}"#)
+                .unwrap()
+                .into_raw();
+        }
+    };
     
-    CString::new(result.to_string()).unwrap().into_raw()
+    // Placeholder - actual implementation would create wallet
+    let result = format!(r#"{{"chain": "{}", "status": "created"}}"#, chain_str);
+    CString::new(result)
+        .unwrap_or_else(|_| CString::new(r#"{"error": "string conversion failed"}"#).unwrap())
+        .into_raw()
 }
 
-/// Get address for chain
+/// Signs a transaction
+/// 
+/// # Safety
+/// - `chain` must be a valid null-terminated C string
+/// - `tx_data` must be a valid null-terminated C string
+/// - Both pointers must point to valid memory
 #[no_mangle]
-pub extern "C" fn walletd_get_address(chain: *const c_char, account: u32, index: u32) -> *mut c_char {
-    let chain = unsafe { CStr::from_ptr(chain).to_str().unwrap_or("bitcoin") };
-    let address = format!("{}_m/44'/0'/{}'/{}", chain, account, index);
-    CString::new(address).unwrap().into_raw()
+pub unsafe extern "C" fn walletd_sign_transaction(
+    chain: *const c_char,
+    tx_data: *const c_char,
+) -> *mut c_char {
+    if chain.is_null() || tx_data.is_null() {
+        return CString::new(r#"{"error": "null parameter"}"#)
+            .unwrap()
+            .into_raw();
+    }
+    
+    let chain_str = match CStr::from_ptr(chain).to_str() {
+        Ok(s) => s,
+        Err(_) => {
+            return CString::new(r#"{"error": "invalid chain string"}"#)
+                .unwrap()
+                .into_raw();
+        }
+    };
+    
+    let _tx_str = match CStr::from_ptr(tx_data).to_str() {
+        Ok(s) => s,
+        Err(_) => {
+            return CString::new(r#"{"error": "invalid tx_data string"}"#)
+                .unwrap()
+                .into_raw();
+        }
+    };
+    
+    // Placeholder - actual implementation would sign transaction
+    let result = format!(r#"{{"chain": "{}", "status": "signed", "signature": "0x..."}}"#, chain_str);
+    CString::new(result)
+        .unwrap_or_else(|_| CString::new(r#"{"error": "string conversion failed"}"#).unwrap())
+        .into_raw()
 }
 
-/// Sign transaction
+/// Broadcasts a signed transaction
+/// 
+/// # Safety
+/// - `chain` must be a valid null-terminated C string
+/// - `signed_tx` must be a valid null-terminated C string
+/// - Both pointers must point to valid memory
 #[no_mangle]
-pub extern "C" fn walletd_sign_transaction(chain: *const c_char, tx_data: *const c_char) -> *mut c_char {
-    let chain = unsafe { CStr::from_ptr(chain).to_str().unwrap_or("") };
-    let _tx = unsafe { CStr::from_ptr(tx_data).to_str().unwrap_or("") };
+pub unsafe extern "C" fn walletd_broadcast_transaction(
+    chain: *const c_char,
+    signed_tx: *const c_char,
+) -> *mut c_char {
+    if chain.is_null() || signed_tx.is_null() {
+        return CString::new(r#"{"error": "null parameter"}"#)
+            .unwrap()
+            .into_raw();
+    }
     
-    let result = serde_json::json!({
-        "success": true,
-        "chain": chain,
-        "signature": "0x" .to_owned() + &"ab".repeat(32),
-    });
+    let chain_str = match CStr::from_ptr(chain).to_str() {
+        Ok(s) => s,
+        Err(_) => {
+            return CString::new(r#"{"error": "invalid chain string"}"#)
+                .unwrap()
+                .into_raw();
+        }
+    };
     
-    CString::new(result.to_string()).unwrap().into_raw()
+    let _signed_tx_str = match CStr::from_ptr(signed_tx).to_str() {
+        Ok(s) => s,
+        Err(_) => {
+            return CString::new(r#"{"error": "invalid signed_tx string"}"#)
+                .unwrap()
+                .into_raw();
+        }
+    };
+    
+    // Placeholder - actual implementation would broadcast
+    let result = format!(r#"{{"chain": "{}", "status": "broadcast", "txid": "..."}}"#, chain_str);
+    CString::new(result)
+        .unwrap_or_else(|_| CString::new(r#"{"error": "string conversion failed"}"#).unwrap())
+        .into_raw()
 }
 
-/// Broadcast transaction
+/// Frees a string allocated by WalletD
+/// 
+/// # Safety
+/// - `s` must be a pointer returned by a walletd_* function
+/// - `s` must not have been freed before
+/// - After calling this function, `s` must not be used
 #[no_mangle]
-pub extern "C" fn walletd_broadcast(chain: *const c_char, signed_tx: *const c_char) -> *mut c_char {
-    let chain = unsafe { CStr::from_ptr(chain).to_str().unwrap_or("") };
-    let _tx = unsafe { CStr::from_ptr(signed_tx).to_str().unwrap_or("") };
-    
-    let result = RUNTIME.block_on(async {
-        serde_json::json!({
-            "success": true,
-            "chain": chain,
-            "tx_hash": "0x" .to_owned() + &"cd".repeat(32),
-        })
-    });
-    
-    CString::new(result.to_string()).unwrap().into_raw()
-}
-
-/// Free string allocated by SDK
-#[no_mangle]
-pub extern "C" fn walletd_free_string(s: *mut c_char) {
+pub unsafe extern "C" fn walletd_free_string(s: *mut c_char) {
     if !s.is_null() {
-        unsafe { let _ = CString::from_raw(s); }
+        let _ = CString::from_raw(s);
     }
 }
 
-/// Get SDK version
-#[no_mangle]
-pub extern "C" fn walletd_version() -> *mut c_char {
-    CString::new("1.4.0").unwrap().into_raw()
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::ffi::CString;
 
-/// Get supported chains
-#[no_mangle]
-pub extern "C" fn walletd_supported_chains() -> *mut c_char {
-    let chains = vec![
-        "bitcoin", "ethereum", "solana", "hedera", "monero", "icp",
-        "base", "polygon", "avalanche", "arbitrum", "cardano", "cosmos",
-        "polkadot", "near", "tron", "sui", "aptos", "ton"
-    ];
-    CString::new(serde_json::to_string(&chains).unwrap()).unwrap().into_raw()
+    #[test]
+    fn test_version() {
+        let version = walletd_version();
+        assert!(!version.is_null());
+        unsafe { walletd_free_string(version); }
+    }
+
+    #[test]
+    fn test_supported_chains() {
+        let chains = walletd_supported_chains();
+        assert!(!chains.is_null());
+        unsafe {
+            let chains_str = CStr::from_ptr(chains).to_str().unwrap();
+            assert!(chains_str.contains("bitcoin"));
+            assert!(chains_str.contains("ethereum"));
+            walletd_free_string(chains);
+        }
+    }
+
+    #[test]
+    fn test_is_chain_supported() {
+        let btc = CString::new("bitcoin").unwrap();
+        let fake = CString::new("fakecoin").unwrap();
+        
+        unsafe {
+            assert!(walletd_is_chain_supported(btc.as_ptr()));
+            assert!(!walletd_is_chain_supported(fake.as_ptr()));
+            assert!(!walletd_is_chain_supported(std::ptr::null()));
+        }
+    }
+
+    #[test]
+    fn test_create_wallet_null() {
+        unsafe {
+            let result = walletd_create_wallet(std::ptr::null());
+            let result_str = CStr::from_ptr(result).to_str().unwrap();
+            assert!(result_str.contains("error"));
+            walletd_free_string(result);
+        }
+    }
 }

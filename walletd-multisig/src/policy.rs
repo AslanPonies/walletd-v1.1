@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// Spending policy for multisig wallets
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct SpendingPolicy {
     pub daily_limit: Option<u64>,
     pub per_tx_limit: Option<u64>,
@@ -12,17 +13,6 @@ pub struct SpendingPolicy {
     pub time_delay: Option<u64>,
 }
 
-impl Default for SpendingPolicy {
-    fn default() -> Self {
-        Self {
-            daily_limit: None,
-            per_tx_limit: None,
-            whitelist: Vec::new(),
-            require_2fa: false,
-            time_delay: None,
-        }
-    }
-}
 
 impl SpendingPolicy {
     pub fn enterprise() -> Self {

@@ -45,7 +45,7 @@ impl CardanoBroadcaster {
 impl TransactionBroadcaster for CardanoBroadcaster {
     async fn broadcast(&self, signed_tx: &[u8]) -> BroadcastResult<BroadcastResponse> {
         let response = self.client
-            .post(&format!("{}/tx/submit", self.submit_api))
+            .post(format!("{}/tx/submit", self.submit_api))
             .header("Content-Type", "application/cbor")
             .body(signed_tx.to_vec())
             .send()
@@ -62,7 +62,7 @@ impl TransactionBroadcaster for CardanoBroadcaster {
     }
 
     async fn get_status(&self, tx_hash: &str) -> BroadcastResult<TransactionStatus> {
-        let mut request = self.client.get(&format!("{}/txs/{}", self.blockfrost_url, tx_hash));
+        let mut request = self.client.get(format!("{}/txs/{}", self.blockfrost_url, tx_hash));
         if let Some(ref key) = self.api_key {
             request = request.header("project_id", key);
         }
@@ -113,7 +113,7 @@ impl TransactionBroadcaster for CardanoBroadcaster {
     }
 
     async fn network_status(&self) -> BroadcastResult<NetworkStatus> {
-        let mut request = self.client.get(&format!("{}/blocks/latest", self.blockfrost_url));
+        let mut request = self.client.get(format!("{}/blocks/latest", self.blockfrost_url));
         if let Some(ref key) = self.api_key {
             request = request.header("project_id", key);
         }

@@ -6,7 +6,7 @@ use sha2::{Sha256, Digest};
 /// Derive CREATE2 Safe address
 pub fn derive_address(config: &MultisigConfig) -> MultisigResult<String> {
     let mut hasher = Sha256::new();
-    hasher.update(&[config.threshold, config.total_signers]);
+    hasher.update([config.threshold, config.total_signers]);
     for signer in &config.signers {
         hasher.update(&signer.public_key);
     }
