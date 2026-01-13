@@ -1,0 +1,966 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Bitcoin (Deep Dive) - WalletD Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "navy";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-c119205a.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-3f898b94.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">WalletD Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/AslanPonies/walletd-v1.1" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="bitcoin-deep-dive"><a class="header" href="#bitcoin-deep-dive">Bitcoin Deep Dive</a></h1>
+<blockquote>
+<p><strong>The complete guide to Bitcoin in WalletD</strong> — From basics to production-ready code.</p>
+</blockquote>
+<hr>
+<h2 id="table-of-contents"><a class="header" href="#table-of-contents">Table of Contents</a></h2>
+<ol>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#address-types-explained">Address Types Explained</a></li>
+<li><a href="#complete-api-reference">Complete API Reference</a></li>
+<li><a href="#transaction-building">Transaction Building</a></li>
+<li><a href="#fee-estimation">Fee Estimation</a></li>
+<li><a href="#utxo-management">UTXO Management</a></li>
+<li><a href="#replace-by-fee-rbf">Replace-By-Fee (RBF)</a></li>
+<li><a href="#multi-signature-wallets">Multi-Signature Wallets</a></li>
+<li><a href="#watch-only-wallets">Watch-Only Wallets</a></li>
+<li><a href="#testnet-development">Testnet Development</a></li>
+<li><a href="#production-checklist">Production Checklist</a></li>
+<li><a href="#common-patterns">Common Patterns</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ol>
+<hr>
+<h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
+<pre class="playground"><code class="language-rust">use walletd::bitcoin::{derive_address, get_balance, send_transaction, get_transactions};
+use walletd::types::WalletMode;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let mnemonic = "your 24 word mnemonic phrase here";
+    
+    // 1. Derive a SegWit address
+    let address = derive_address(mnemonic, WalletMode::Mainnet)?;
+    println!("Address: {}", address);  // bc1q...
+    
+    // 2. Check balance
+    let balance = get_balance(&amp;address, "https://blockstream.info/api").await?;
+    println!("Balance: {} sats", balance);
+    
+    // 3. Get transaction history
+    let txs = get_transactions(&amp;address, "https://blockstream.info/api").await?;
+    for tx in txs {
+        println!("{}: {} sats", tx.txid, tx.amount);
+    }
+    
+    Ok(())
+}</code></pre>
+<hr>
+<h2 id="address-types-explained"><a class="header" href="#address-types-explained">Address Types Explained</a></h2>
+<p>Bitcoin has evolved through multiple address formats. <strong>WalletD defaults to Native SegWit (bc1q) for optimal fees.</strong></p>
+<h3 id="comparison-table"><a class="header" href="#comparison-table">Comparison Table</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Type</th><th>Prefix</th><th>Example</th><th>Avg Fee</th><th>Use Case</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Legacy (P2PKH)</strong></td><td><code>1</code></td><td><code>1BvBMSEYstWetq...</code></td><td>High</td><td>Compatibility</td></tr>
+<tr><td><strong>Script (P2SH)</strong></td><td><code>3</code></td><td><code>3J98t1WpEZ73CN...</code></td><td>Medium</td><td>Multisig, wrapped SegWit</td></tr>
+<tr><td><strong>Native SegWit (P2WPKH)</strong></td><td><code>bc1q</code></td><td><code>bc1qar0srrr7xfk...</code></td><td><strong>Low</strong> ✓</td><td><strong>Recommended</strong></td></tr>
+<tr><td><strong>Taproot (P2TR)</strong></td><td><code>bc1p</code></td><td><code>bc1pmzfrwwndsqm...</code></td><td>Lowest</td><td>Privacy, complex scripts</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="why-segwit"><a class="header" href="#why-segwit">Why SegWit?</a></h3>
+<pre><code>Legacy transaction:    ~226 bytes → ~22,600 sats fee @ 100 sat/vB
+SegWit transaction:    ~141 vbytes → ~14,100 sats fee @ 100 sat/vB
+                                     ─────────────────
+                                     37% fee savings
+</code></pre>
+<h3 id="derivation-paths"><a class="header" href="#derivation-paths">Derivation Paths</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Standard</th><th>Path</th><th>Address Type</th><th>When to Use</th></tr>
+</thead>
+<tbody>
+<tr><td>BIP-44</td><td><code>m/44'/0'/0'/0/0</code></td><td>Legacy (1…)</td><td>Exchange compatibility</td></tr>
+<tr><td>BIP-49</td><td><code>m/49'/0'/0'/0/0</code></td><td>Wrapped SegWit (3…)</td><td>Legacy system support</td></tr>
+<tr><td><strong>BIP-84</strong></td><td><code>m/84'/0'/0'/0/0</code></td><td><strong>Native SegWit (bc1q…)</strong></td><td><strong>Default - use this</strong></td></tr>
+<tr><td>BIP-86</td><td><code>m/86'/0'/0'/0/0</code></td><td>Taproot (bc1p…)</td><td>Advanced privacy</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="testnet-prefixes"><a class="header" href="#testnet-prefixes">Testnet Prefixes</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Type</th><th>Mainnet</th><th>Testnet</th></tr>
+</thead>
+<tbody>
+<tr><td>Legacy</td><td><code>1</code></td><td><code>m</code> or <code>n</code></td></tr>
+<tr><td>Script</td><td><code>3</code></td><td><code>2</code></td></tr>
+<tr><td>SegWit</td><td><code>bc1q</code></td><td><code>tb1q</code></td></tr>
+<tr><td>Taproot</td><td><code>bc1p</code></td><td><code>tb1p</code></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="complete-api-reference"><a class="header" href="#complete-api-reference">Complete API Reference</a></h2>
+<h3 id="derive_address"><a class="header" href="#derive_address">derive_address</a></h3>
+<p>Derives a Bitcoin address from a BIP-39 mnemonic.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub fn derive_address(mnemonic: &amp;str, mode: WalletMode) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Parameters:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mnemonic</code></td><td><code>&amp;str</code></td><td>BIP-39 mnemonic (12 or 24 words)</td></tr>
+<tr><td><code>mode</code></td><td><code>WalletMode</code></td><td><code>Mainnet</code>, <code>Testnet</code>, or <code>Demo</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Returns:</strong> Native SegWit address (<code>bc1q...</code> or <code>tb1q...</code>)</p>
+<p><strong>Example:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Mainnet
+let addr = derive_address(mnemonic, WalletMode::Mainnet)?;
+assert!(addr.starts_with("bc1q"));
+
+// Testnet  
+let addr = derive_address(mnemonic, WalletMode::Testnet)?;
+assert!(addr.starts_with("tb1q"));
+
+// Derive multiple addresses (different accounts)
+for i in 0..5 {
+    let addr = derive_address_at_index(mnemonic, WalletMode::Mainnet, i)?;
+    println!("Address {}: {}", i, addr);
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Errors:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+</thead>
+<tbody>
+<tr><td><code>InvalidMnemonic</code></td><td>Wrong word count or invalid words</td><td>Check for 12/24 words, verify spelling</td></tr>
+<tr><td><code>DerivationFailed</code></td><td>Cryptographic error</td><td>Ensure mnemonic is valid BIP-39</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h3 id="get_balance"><a class="header" href="#get_balance">get_balance</a></h3>
+<p>Fetches the confirmed balance for an address.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn get_balance(address: &amp;str, rpc_url: &amp;str) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Parameters:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>address</code></td><td><code>&amp;str</code></td><td>Any valid Bitcoin address</td></tr>
+<tr><td><code>rpc_url</code></td><td><code>&amp;str</code></td><td>Esplora-compatible API endpoint</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Returns:</strong> Balance in <strong>satoshis</strong> as a string</p>
+<p><strong>RPC Endpoints:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Network</th><th>Provider</th><th>URL</th><th>Rate Limit</th></tr>
+</thead>
+<tbody>
+<tr><td>Mainnet</td><td>Blockstream</td><td><code>https://blockstream.info/api</code></td><td>None</td></tr>
+<tr><td>Mainnet</td><td>Mempool.space</td><td><code>https://mempool.space/api</code></td><td>10/sec</td></tr>
+<tr><td>Testnet</td><td>Blockstream</td><td><code>https://blockstream.info/testnet/api</code></td><td>None</td></tr>
+<tr><td>Testnet</td><td>Mempool.space</td><td><code>https://mempool.space/testnet/api</code></td><td>10/sec</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Example:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let balance_sats = get_balance(
+    "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+    "https://blockstream.info/api"
+).await?;
+
+// Convert to BTC
+let sats: u64 = balance_sats.parse()?;
+let btc = sats as f64 / 100_000_000.0;
+println!("{:.8} BTC", btc);
+<span class="boring">}</span></code></pre>
+<p><strong>Errors:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+</thead>
+<tbody>
+<tr><td><code>NetworkError</code></td><td>RPC unreachable</td><td>Check internet, try another endpoint</td></tr>
+<tr><td><code>InvalidAddress</code></td><td>Malformed address</td><td>Validate address format</td></tr>
+<tr><td><code>RpcError(404)</code></td><td>Address never used</td><td>This is valid - balance is 0</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h3 id="send_transaction"><a class="header" href="#send_transaction">send_transaction</a></h3>
+<p>Creates, signs, and broadcasts a Bitcoin transaction.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn send_transaction(
+    from_address: &amp;str,
+    to_address: &amp;str,
+    amount_sats: u64,
+    rpc_url: &amp;str,
+) -&gt; Result&lt;String&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Parameters:</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>from_address</code></td><td><code>&amp;str</code></td><td>Sender’s address (must have UTXOs)</td></tr>
+<tr><td><code>to_address</code></td><td><code>&amp;str</code></td><td>Recipient’s address (any format)</td></tr>
+<tr><td><code>amount_sats</code></td><td><code>u64</code></td><td>Amount in satoshis</td></tr>
+<tr><td><code>rpc_url</code></td><td><code>&amp;str</code></td><td>API endpoint</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Returns:</strong> Transaction ID (txid)</p>
+<p><strong>Example:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Send 0.001 BTC (100,000 sats)
+let txid = send_transaction(
+    "bc1qsender...",
+    "bc1qrecipient...",
+    100_000,
+    "https://blockstream.info/api"
+).await?;
+
+println!("Sent! Track at: https://mempool.space/tx/{}", txid);
+<span class="boring">}</span></code></pre>
+<p><strong>Fee Handling:</strong></p>
+<ul>
+<li>Fees are <strong>automatically estimated</strong> based on current mempool</li>
+<li>Default target: 6-block confirmation (~1 hour)</li>
+<li>For custom fees, use <code>send_transaction_with_fee()</code></li>
+</ul>
+<hr>
+<h3 id="get_transactions"><a class="header" href="#get_transactions">get_transactions</a></h3>
+<p>Retrieves transaction history for an address.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub async fn get_transactions(
+    address: &amp;str,
+    rpc_url: &amp;str,
+) -&gt; Result&lt;Vec&lt;TransactionInfo&gt;&gt;
+<span class="boring">}</span></code></pre>
+<p><strong>Returns:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct TransactionInfo {
+    pub txid: String,           // Transaction ID
+    pub amount: i64,            // Satoshis (+received, -sent)
+    pub fee: u64,               // Fee paid (if sender)
+    pub confirmations: u32,     // 0 = unconfirmed
+    pub timestamp: u64,         // Unix timestamp
+    pub block_height: Option&lt;u64&gt;,
+}
+<span class="boring">}</span></code></pre>
+<p><strong>Example:</strong></p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let txs = get_transactions(&amp;address, &amp;rpc).await?;
+
+for tx in txs {
+    let direction = if tx.amount &gt; 0 { "↓ IN" } else { "↑ OUT" };
+    let btc = (tx.amount.abs() as f64) / 100_000_000.0;
+    println!("{} {:.8} BTC - {}", direction, btc, tx.txid);
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="transaction-building"><a class="header" href="#transaction-building">Transaction Building</a></h2>
+<h3 id="simple-send"><a class="header" href="#simple-send">Simple Send</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Send entire balance minus fee
+let balance: u64 = get_balance(&amp;from, &amp;rpc).await?.parse()?;
+let fee = estimate_fee(&amp;rpc, 1).await?;  // 1 input
+let amount = balance - fee;
+
+let txid = send_transaction(&amp;from, &amp;to, amount, &amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="multi-output-transaction"><a class="header" href="#multi-output-transaction">Multi-Output Transaction</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::build_transaction;
+
+let outputs = vec![
+    ("bc1qalice...", 50_000),   // 50k sats to Alice
+    ("bc1qbob...", 30_000),     // 30k sats to Bob
+    ("bc1qcarol...", 20_000),   // 20k sats to Carol
+];
+
+let txid = build_transaction()
+    .from(&amp;my_address)
+    .outputs(outputs)
+    .fee_rate(10)  // sat/vB
+    .broadcast(&amp;rpc)
+    .await?;
+<span class="boring">}</span></code></pre>
+<h3 id="op_return-data"><a class="header" href="#op_return-data">OP_RETURN Data</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Embed data in transaction (up to 80 bytes)
+let txid = build_transaction()
+    .from(&amp;my_address)
+    .to(&amp;recipient, 10_000)
+    .op_return(b"WalletD was here!")
+    .broadcast(&amp;rpc)
+    .await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="fee-estimation"><a class="header" href="#fee-estimation">Fee Estimation</a></h2>
+<h3 id="current-fee-rates"><a class="header" href="#current-fee-rates">Current Fee Rates</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::get_fee_estimates;
+
+let fees = get_fee_estimates("https://mempool.space/api").await?;
+
+println!("Next block:  {} sat/vB", fees.fastest);    // ~10 min
+println!("3 blocks:    {} sat/vB", fees.half_hour);  // ~30 min
+println!("6 blocks:    {} sat/vB", fees.hour);       // ~1 hour
+println!("Low priority:{} sat/vB", fees.economy);    // ~1 day
+<span class="boring">}</span></code></pre>
+<h3 id="calculate-transaction-fee"><a class="header" href="#calculate-transaction-fee">Calculate Transaction Fee</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Estimate fee for a transaction
+fn estimate_tx_fee(num_inputs: usize, num_outputs: usize, fee_rate: u64) -&gt; u64 {
+    // SegWit transaction size estimation
+    let base_size = 10;  // Version + locktime
+    let input_size = 68; // Per input (SegWit)
+    let output_size = 31; // Per P2WPKH output
+    
+    let vsize = base_size + (num_inputs * input_size) + (num_outputs * output_size);
+    (vsize as u64) * fee_rate
+}
+
+// Example: 2 inputs, 2 outputs @ 20 sat/vB
+let fee = estimate_tx_fee(2, 2, 20);
+println!("Estimated fee: {} sats", fee);  // ~3,960 sats
+<span class="boring">}</span></code></pre>
+<h3 id="fee-priority-guide"><a class="header" href="#fee-priority-guide">Fee Priority Guide</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Priority</th><th>Target</th><th>Typical Rate</th><th>When to Use</th></tr>
+</thead>
+<tbody>
+<tr><td>Urgent</td><td>Next block</td><td>50-200 sat/vB</td><td>Time-critical</td></tr>
+<tr><td>Normal</td><td>3 blocks</td><td>20-50 sat/vB</td><td>Default</td></tr>
+<tr><td>Low</td><td>6+ blocks</td><td>10-20 sat/vB</td><td>Non-urgent</td></tr>
+<tr><td>Economy</td><td>1 day</td><td>1-10 sat/vB</td><td>No rush</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="utxo-management"><a class="header" href="#utxo-management">UTXO Management</a></h2>
+<h3 id="whats-a-utxo"><a class="header" href="#whats-a-utxo">What’s a UTXO?</a></h3>
+<p>Bitcoin doesn’t have “balances” - it has Unspent Transaction Outputs (UTXOs).</p>
+<pre><code>Your "balance" = Sum of all UTXOs you control
+
+Example:
+  UTXO 1: 0.5 BTC (from tx abc123)
+  UTXO 2: 0.3 BTC (from tx def456)
+  UTXO 3: 0.2 BTC (from tx ghi789)
+  ─────────────────────────────────
+  Balance: 1.0 BTC
+</code></pre>
+<h3 id="list-utxos"><a class="header" href="#list-utxos">List UTXOs</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::get_utxos;
+
+let utxos = get_utxos(&amp;address, &amp;rpc).await?;
+
+for utxo in &amp;utxos {
+    println!("{}:{} - {} sats", 
+        utxo.txid, 
+        utxo.vout, 
+        utxo.value
+    );
+}
+<span class="boring">}</span></code></pre>
+<h3 id="utxo-consolidation"><a class="header" href="#utxo-consolidation">UTXO Consolidation</a></h3>
+<p>Consolidate many small UTXOs when fees are low:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Check if consolidation makes sense
+let utxos = get_utxos(&amp;address, &amp;rpc).await?;
+let fees = get_fee_estimates(&amp;rpc).await?;
+
+if fees.economy &lt; 5 &amp;&amp; utxos.len() &gt; 10 {
+    println!("Good time to consolidate {} UTXOs", utxos.len());
+    
+    let txid = consolidate_utxos(&amp;address, &amp;rpc).await?;
+    println!("Consolidated to single UTXO: {}", txid);
+}
+<span class="boring">}</span></code></pre>
+<h3 id="dust-threshold"><a class="header" href="#dust-threshold">Dust Threshold</a></h3>
+<p>UTXOs below ~546 sats are considered “dust” and may not be spendable economically:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>const DUST_THRESHOLD: u64 = 546;
+
+let utxos = get_utxos(&amp;address, &amp;rpc).await?;
+let dust_utxos: Vec&lt;_&gt; = utxos.iter()
+    .filter(|u| u.value &lt; DUST_THRESHOLD)
+    .collect();
+
+if !dust_utxos.is_empty() {
+    println!("Warning: {} dust UTXOs ({} sats total)",
+        dust_utxos.len(),
+        dust_utxos.iter().map(|u| u.value).sum::&lt;u64&gt;()
+    );
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="replace-by-fee-rbf"><a class="header" href="#replace-by-fee-rbf">Replace-By-Fee (RBF)</a></h2>
+<p>Speed up stuck transactions by replacing them with higher fees.</p>
+<h3 id="enable-rbf"><a class="header" href="#enable-rbf">Enable RBF</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let txid = build_transaction()
+    .from(&amp;address)
+    .to(&amp;recipient, amount)
+    .rbf(true)  // Enable replacement
+    .broadcast(&amp;rpc)
+    .await?;
+<span class="boring">}</span></code></pre>
+<h3 id="bump-fee"><a class="header" href="#bump-fee">Bump Fee</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::bump_fee;
+
+// Original transaction stuck in mempool
+let original_txid = "abc123...";
+
+// Bump fee to 50 sat/vB
+let new_txid = bump_fee(original_txid, 50, &amp;rpc).await?;
+println!("Replaced {} with {}", original_txid, new_txid);
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="multi-signature-wallets"><a class="header" href="#multi-signature-wallets">Multi-Signature Wallets</a></h2>
+<h3 id="create-2-of-3-multisig"><a class="header" href="#create-2-of-3-multisig">Create 2-of-3 Multisig</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::multisig::{MultisigConfig, create_multisig_address};
+
+// Three participants
+let pubkeys = vec![
+    "02abc...",  // Alice
+    "02def...",  // Bob  
+    "02ghi...",  // Carol
+];
+
+// 2 of 3 required to spend
+let config = MultisigConfig {
+    threshold: 2,
+    pubkeys: pubkeys,
+};
+
+let address = create_multisig_address(&amp;config, WalletMode::Mainnet)?;
+println!("Multisig address: {}", address);  // bc1q... (P2WSH)
+<span class="boring">}</span></code></pre>
+<h3 id="sign-multisig-transaction"><a class="header" href="#sign-multisig-transaction">Sign Multisig Transaction</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::multisig::{create_multisig_tx, add_signature};
+
+// Step 1: Create unsigned transaction
+let mut tx = create_multisig_tx(&amp;config, &amp;to, amount)?;
+println!("Share this with signers: {}", tx.to_hex());
+
+// Step 2: Alice signs
+let alice_sig = alice_wallet.sign(&amp;tx)?;
+add_signature(&amp;mut tx, &amp;alice_sig, 0)?;
+
+// Step 3: Bob signs  
+let bob_sig = bob_wallet.sign(&amp;tx)?;
+add_signature(&amp;mut tx, &amp;bob_sig, 1)?;
+
+// Step 4: Threshold met - broadcast
+assert!(tx.is_complete());  // 2 of 3 signed
+let txid = broadcast(&amp;tx, &amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="watch-only-wallets"><a class="header" href="#watch-only-wallets">Watch-Only Wallets</a></h2>
+<p>Monitor addresses without private keys:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use walletd::bitcoin::watch_only::WatchOnlyWallet;
+
+// Create watch-only wallet from xpub
+let xpub = "xpub6CUG...";
+let wallet = WatchOnlyWallet::from_xpub(xpub)?;
+
+// Generate receiving addresses
+for i in 0..5 {
+    let addr = wallet.get_address(i)?;
+    println!("Address {}: {}", i, addr);
+}
+
+// Monitor for incoming transactions
+let balance = wallet.get_total_balance(&amp;rpc).await?;
+let txs = wallet.get_all_transactions(&amp;rpc).await?;
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="testnet-development"><a class="header" href="#testnet-development">Testnet Development</a></h2>
+<h3 id="1-get-testnet-coins"><a class="header" href="#1-get-testnet-coins">1. Get Testnet Coins</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Faucet</th><th>URL</th><th>Amount</th></tr>
+</thead>
+<tbody>
+<tr><td>Coinfaucet</td><td><a href="https://coinfaucet.eu/en/btc-testnet/">coinfaucet.eu/btc-testnet</a></td><td>0.01 tBTC</td></tr>
+<tr><td>Bitcoin Testnet</td><td><a href="https://bitcoinfaucet.uo1.net/">bitcoinfaucet.uo1.net</a></td><td>0.001 tBTC</td></tr>
+<tr><td>Mempool</td><td><a href="https://mempool.space/testnet/faucet">mempool.space/testnet/faucet</a></td><td>0.01 tBTC</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="2-use-testnet-mode"><a class="header" href="#2-use-testnet-mode">2. Use Testnet Mode</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// All functions work the same, just change the mode
+let address = derive_address(mnemonic, WalletMode::Testnet)?;
+assert!(address.starts_with("tb1q"));
+
+let balance = get_balance(&amp;address, "https://blockstream.info/testnet/api").await?;
+<span class="boring">}</span></code></pre>
+<h3 id="3-testnet-block-explorers"><a class="header" href="#3-testnet-block-explorers">3. Testnet Block Explorers</a></h3>
+<ul>
+<li><a href="https://mempool.space/testnet">mempool.space/testnet</a></li>
+<li><a href="https://blockstream.info/testnet">blockstream.info/testnet</a></li>
+</ul>
+<hr>
+<h2 id="production-checklist"><a class="header" href="#production-checklist">Production Checklist</a></h2>
+<p>Before going live:</p>
+<ul>
+<li><input disabled="" type="checkbox"> <strong>Key Security</strong>: Mnemonic stored securely (HSM, hardware wallet, or encrypted)</li>
+<li><input disabled="" type="checkbox"> <strong>Address Validation</strong>: Validate all addresses before sending</li>
+<li><input disabled="" type="checkbox"> <strong>Amount Validation</strong>: Check for overflow, dust, and sufficient balance</li>
+<li><input disabled="" type="checkbox"> <strong>Fee Estimation</strong>: Use real-time fee estimates, not hardcoded values</li>
+<li><input disabled="" type="checkbox"> <strong>Error Handling</strong>: Handle all error cases gracefully</li>
+<li><input disabled="" type="checkbox"> <strong>Rate Limiting</strong>: Respect RPC provider limits</li>
+<li><input disabled="" type="checkbox"> <strong>Monitoring</strong>: Log all transactions for audit trail</li>
+<li><input disabled="" type="checkbox"> <strong>Backup</strong>: Test wallet recovery from mnemonic</li>
+<li><input disabled="" type="checkbox"> <strong>Testing</strong>: Full test coverage on testnet first</li>
+</ul>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Production-ready send function
+async fn safe_send(
+    from: &amp;str,
+    to: &amp;str, 
+    amount: u64,
+    rpc: &amp;str,
+) -&gt; Result&lt;String, WalletError&gt; {
+    // 1. Validate addresses
+    if !is_valid_address(from) || !is_valid_address(to) {
+        return Err(WalletError::InvalidAddress);
+    }
+    
+    // 2. Check balance
+    let balance: u64 = get_balance(from, rpc).await?.parse()?;
+    let fee = estimate_fee(rpc, 1, 2).await?;
+    
+    if amount + fee &gt; balance {
+        return Err(WalletError::InsufficientFunds);
+    }
+    
+    // 3. Check dust
+    if amount &lt; 546 {
+        return Err(WalletError::DustAmount);
+    }
+    
+    // 4. Send with logging
+    let txid = send_transaction(from, to, amount, rpc).await?;
+    log::info!("Sent {} sats from {} to {}: {}", amount, from, to, txid);
+    
+    Ok(txid)
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="common-patterns"><a class="header" href="#common-patterns">Common Patterns</a></h2>
+<h3 id="convert-satoshis--btc"><a class="header" href="#convert-satoshis--btc">Convert Satoshis ↔ BTC</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>const SATS_PER_BTC: f64 = 100_000_000.0;
+
+fn sats_to_btc(sats: u64) -&gt; f64 {
+    sats as f64 / SATS_PER_BTC
+}
+
+fn btc_to_sats(btc: f64) -&gt; u64 {
+    (btc * SATS_PER_BTC) as u64
+}
+
+// Format for display
+fn format_btc(sats: u64) -&gt; String {
+    format!("{:.8} BTC", sats_to_btc(sats))
+}
+<span class="boring">}</span></code></pre>
+<h3 id="validate-address"><a class="header" href="#validate-address">Validate Address</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn is_valid_bitcoin_address(address: &amp;str, network: WalletMode) -&gt; bool {
+    match network {
+        WalletMode::Mainnet =&gt; {
+            address.starts_with("bc1q") ||  // SegWit
+            address.starts_with("bc1p") ||  // Taproot
+            address.starts_with("1") ||     // Legacy
+            address.starts_with("3")        // Script
+        }
+        WalletMode::Testnet =&gt; {
+            address.starts_with("tb1q") ||
+            address.starts_with("tb1p") ||
+            address.starts_with("m") ||
+            address.starts_with("n") ||
+            address.starts_with("2")
+        }
+        WalletMode::Demo =&gt; true,
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="wait-for-confirmation"><a class="header" href="#wait-for-confirmation">Wait for Confirmation</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use tokio::time::{sleep, Duration};
+
+async fn wait_for_confirmation(
+    txid: &amp;str,
+    rpc: &amp;str,
+    target_confirmations: u32,
+) -&gt; Result&lt;u32, WalletError&gt; {
+    loop {
+        let status = get_transaction_status(txid, rpc).await?;
+        
+        if status.confirmations &gt;= target_confirmations {
+            return Ok(status.confirmations);
+        }
+        
+        println!("Waiting... {} confirmations", status.confirmations);
+        sleep(Duration::from_secs(30)).await;
+    }
+}
+
+// Usage
+let confs = wait_for_confirmation(&amp;txid, &amp;rpc, 6).await?;
+println!("Transaction confirmed with {} confirmations", confs);
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h2>
+<h3 id="insufficient-funds-but-i-have-balance"><a class="header" href="#insufficient-funds-but-i-have-balance">“Insufficient funds” but I have balance</a></h3>
+<p><strong>Cause</strong>: Balance exists but UTXOs are too small after fees.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Check if you can actually spend
+let balance: u64 = get_balance(&amp;addr, &amp;rpc).await?.parse()?;
+let fee = estimate_fee(&amp;rpc, 1, 2).await?;
+let dust = 546;
+
+let spendable = balance.saturating_sub(fee + dust);
+println!("Spendable: {} sats", spendable);
+<span class="boring">}</span></code></pre>
+<h3 id="transaction-stuck-in-mempool"><a class="header" href="#transaction-stuck-in-mempool">Transaction stuck in mempool</a></h3>
+<p><strong>Cause</strong>: Fee too low for current mempool conditions.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Option 1: Wait it out (may take days)
+// Option 2: RBF bump fee
+let new_txid = bump_fee(&amp;old_txid, higher_fee_rate, &amp;rpc).await?;
+
+// Option 3: CPFP (Child Pays For Parent)
+// Spend the unconfirmed output with a high fee
+<span class="boring">}</span></code></pre>
+<h3 id="invalid-address-error"><a class="header" href="#invalid-address-error">Invalid address error</a></h3>
+<p><strong>Cause</strong>: Address format doesn’t match network.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Common mistake: Using mainnet address on testnet
+let addr = derive_address(mnemonic, WalletMode::Mainnet)?;
+// ❌ This will fail:
+get_balance(&amp;addr, "https://blockstream.info/testnet/api").await?;
+
+// ✅ Fix: Match address to network
+let addr = derive_address(mnemonic, WalletMode::Testnet)?;
+get_balance(&amp;addr, "https://blockstream.info/testnet/api").await?;
+<span class="boring">}</span></code></pre>
+<h3 id="rate-limited-by-rpc"><a class="header" href="#rate-limited-by-rpc">Rate limited by RPC</a></h3>
+<p><strong>Cause</strong>: Too many requests.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Add delays between requests
+for addr in addresses {
+    let balance = get_balance(&amp;addr, &amp;rpc).await?;
+    tokio::time::sleep(Duration::from_millis(100)).await;
+}
+
+// Or use a dedicated RPC provider
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
+<ul>
+<li><a href="https://developer.bitcoin.org/devguide/">Bitcoin Developer Guide</a></li>
+<li><a href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki">BIP-32 HD Wallets</a></li>
+<li><a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP-39 Mnemonic</a></li>
+<li><a href="https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki">BIP-84 SegWit</a></li>
+<li><a href="https://mempool.space">Mempool.space</a> - Best block explorer</li>
+<li><a href="https://github.com/Blockstream/esplora/blob/master/API.md">Blockstream Esplora API</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../guides/cli-usage.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../chains/ethereum.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../guides/cli-usage.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../chains/ethereum.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
